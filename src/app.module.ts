@@ -7,13 +7,21 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+// needed to parseInt the env vars into constants to use them without ts throwing error
+const rateTtl = parseInt(process.env.RATE_LIMIT_TTL!, 10);
+const rateLimit = parseInt(process.env.RATE_LIMIT_MAX!, 10);
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URI!), // eslint-disable-line
+    MongooseModule.forRoot(process.env.MONGO_URI!), // eslint-disable-line 
     ThrottlerModule.forRoot({
-      ttl: parseInt(process.env.RATE_LIMIT_TTL!, 10), // eslint-disable-line
-      limit: parseInt(process.env.RATE_LIMIT_MAX!, 10),
+      throttlers: [
+        {
+          ttl: rateTtl,
+          limit: rateLimit,
+        },
+      ],
     }),
     RedisModule,
     AuthModule,
