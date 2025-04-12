@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { RedisModule } from './redis/redis.module';
+import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -14,7 +15,7 @@ const rateLimit = parseInt(process.env.RATE_LIMIT_MAX!, 10);
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URI!), // eslint-disable-line 
+    MongooseModule.forRoot(process.env.MONGO_URI!), // eslint-disable-line
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -25,6 +26,7 @@ const rateLimit = parseInt(process.env.RATE_LIMIT_MAX!, 10);
     }),
     RedisModule,
     AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
