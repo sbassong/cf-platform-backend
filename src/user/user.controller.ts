@@ -29,6 +29,7 @@ export class UserController {
 
   @Post('oauth')
   async oauthUpsert(@Body() body: CreateUserDto) {
+    // console.log({body})
     const { email, name, avatarUrl, provider, providerId } = body;
     return this.userService.createIfNotExists({
       email,
