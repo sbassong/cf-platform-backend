@@ -1,28 +1,43 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
+import { User, UserDocument } from '../user/schemas/user.schema';
+import { SignInDto } from '../user/dto/create-user.dto';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 @Controller('auth')
-// @UseGuards(ThrottlerGuard)
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
+
   @Get('profile')
-  // @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   getProfile() {
     return { message: 'Rate limited and authenticated' };
   }
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('signup')
-  // signup(): Promise<string | undefined> { // for e2e testing
-  signup(): Promise<User | undefined> {
-    return this.authService.signup();
+  async signup(@Body() userBody: SignInDto) {
+    return this.authService.signup(userBody);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('signin')
+  async signin(@Body() userBody: SignInDto) {
+    return this.authService.signin(userBody);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('validateToken')
+  async validateToken(@Body() token: string) {
+    return this.authService.validateToken(token);
   }
 }

@@ -1,15 +1,21 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ type: MongooseSchema.Types.ObjectId })
+  _id: MongooseSchema.Types.ObjectId;
+
   @Prop({ required: true, unique: true })
   email: string;
 
   @Prop()
   name: string;
+
+  @Prop()
+  password: string;
 
   @Prop()
   avatarUrl: string;
@@ -24,7 +30,7 @@ export class User {
   interests: string[];
 
   @Prop()
-  provider: 'google' | 'github' | 'credentials';
+  provider: 'google' | 'facebook' | 'twitter' | 'credentials';
 
   @Prop()
   providerId: string;

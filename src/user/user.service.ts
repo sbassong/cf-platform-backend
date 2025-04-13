@@ -25,7 +25,7 @@ export class UserService {
     return newUser.save();
   }
 
-  async update(id: string, updates: Partial<User>): Promise<User | null> {
+  async update(id: string, updates: CreateUserDto): Promise<User | null> {
     return this.userModel.findByIdAndUpdate(id, updates, { new: true });
   }
 

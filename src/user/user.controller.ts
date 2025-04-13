@@ -17,15 +17,9 @@ export class UserController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() data: any) {
+  async update(@Param('id') id: string, @Body() data: CreateUserDto) {
     return this.userService.update(id, data);
   }
-
-  // // Example use of dto
-  // @Post('oauth')
-  // async oauthUpsert(@Body() createUserDto: CreateUserDto) {
-  //   return this.userService.createIfNotExists(createUserDto);
-  // }
 
   @Post('oauth')
   async oauthUpsert(@Body() body: CreateUserDto) {

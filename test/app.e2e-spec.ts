@@ -22,10 +22,10 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect('Hello World!');
   });
-  it('/ (POST)', () => {
-    return request(app.getHttpServer())
-      .post('/auth/signup') // path is @controller argument +  method's endpoint arg
-      .expect(201)
-      .expect('sam@email.com');
-  });
+  // it('/ (POST)', () => {
+  //   return request(app.getHttpServer())
+  //     .post('/auth/signup') // path is @controller argument +  method's endpoint arg
+  //     .expect(201)
+  //     .expect('sam@email.com');
+  // });
 });

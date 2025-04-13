@@ -11,12 +11,7 @@ export class RedisService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.client = new Redis(this.configService.get('REDIS_URL'), {
-      // tls: {}, // This enables TLS mode — mandatory for `rediss://`
-      // }).on('error', (err) => {
-      //   // for debugging
-      //   console.error('Redis error:', err);
-    });
+    this.client = new Redis(this.configService.get('REDIS_URL'));
   }
 
   getClient(): Redis {
