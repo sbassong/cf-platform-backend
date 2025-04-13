@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
-import { CreateUserDto } from './dto/create-user.dto';
+import { OauthUserDto } from './dto/oauth-user-dto';
 
 @Injectable()
 export class UserService {
@@ -18,14 +18,14 @@ export class UserService {
     return user;
   }
 
-  async createIfNotExists(userData: CreateUserDto): Promise<User> {
+  async createIfNotExists(userData: OauthUserDto): Promise<User> {
     const existing = await this.findByEmail(userData.email);
     if (existing) return existing;
     const newUser = new this.userModel(userData);
     return newUser.save();
   }
 
-  async update(id: string, updates: CreateUserDto): Promise<User | null> {
+  async update(id: string, updates: Partial<User>): Promise<User | null> {
     return this.userModel.findByIdAndUpdate(id, updates, { new: true });
   }
 

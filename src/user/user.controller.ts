@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Param, Put, Body } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { OauthUserDto } from './dto/oauth-user-dto';
+import { User } from './schemas/user.schema';
 
 @Controller('users')
 export class UserController {
@@ -17,13 +18,12 @@ export class UserController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() data: CreateUserDto) {
+  async update(@Param('id') id: string, @Body() data: Partial<User>) {
     return this.userService.update(id, data);
   }
 
   @Post('oauth')
-  async oauthUpsert(@Body() body: CreateUserDto) {
-    // console.log({body})
+  async oauthUpsert(@Body() body: OauthUserDto) {
     const { email, name, avatarUrl, provider, providerId } = body;
     return this.userService.createIfNotExists({
       email,

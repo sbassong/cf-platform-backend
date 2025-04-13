@@ -10,7 +10,7 @@ import { UserService } from '../user/user.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../user/schemas/user.schema';
-import { SignInDto } from '../user/dto/create-user.dto';
+import { SigninUserDto } from '../user/dto/signin-user-dto';
 
 interface JwtPayload {
   email: string;
@@ -30,21 +30,25 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async signup(userBody: SignInDto): Promise<User> {
+  async signup(userBody: SigninUserDto): Promise<User> {
     const existing = await this.userService.findByEmail(userBody.email);
     if (existing) throw new BadRequestException('Email already in use');
-
-    // Hash password using bcryptjs
     const hashedPassword = bcrypt.hash(userBody.password, 10);
     const userData = { ...userBody, password: hashedPassword };
     return this.userService.createIfNotExists(userData);
   }
 
-  async signin(userData: SignInDto): Promise<User> {
+  async signin(userData: SigninUserDto): Promise<User> {
     const user = await this.userService.findByEmail(userData.email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-    const isValid = await bcrypt.compare(userData.password, user.password);
-    if (!isValid) throw new UnauthorizedException('Invalid credentials');
+    if (!user)
+      throw new UnauthorizedException(
+        'There was an error while logging you in. Please try again.',
+      );
+    const isValid = await bcrypt.compare(userData.password, user.password!); // may need to revisit validating password without ! await needed for next line
+    if (!isValid)
+      throw new UnauthorizedException(
+        'There was an error while logging you in. Please try again.',
+      );
     return user;
   }
 

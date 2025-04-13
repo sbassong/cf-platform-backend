@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../user/schemas/user.schema';
-import { SignInDto } from '../user/dto/create-user.dto';
+import { SigninUserDto } from '../user/dto/signin-user-dto';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -25,13 +25,13 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('signup')
-  async signup(@Body() userBody: SignInDto) {
+  async signup(@Body() userBody: SigninUserDto) {
     return this.authService.signup(userBody);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Post('signin')
-  async signin(@Body() userBody: SignInDto) {
+  async signin(@Body() userBody: SigninUserDto) {
     return this.authService.signin(userBody);
   }
 

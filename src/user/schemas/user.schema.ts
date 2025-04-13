@@ -15,25 +15,25 @@ export class User {
   name: string;
 
   @Prop()
-  password: string;
+  password?: string;
 
   @Prop()
   avatarUrl: string;
 
   @Prop()
-  bio: string;
+  bio?: string;
 
   @Prop()
-  location: string;
+  location?: string;
 
   @Prop({ type: [String], default: [] })
   interests: string[];
 
   @Prop()
-  provider: 'google' | 'facebook' | 'twitter' | 'credentials';
+  provider?: 'google' | 'facebook' | 'twitter' | 'credentials';
 
   @Prop()
-  providerId: string;
+  providerId?: string;
 
   @Prop({ default: 'user' })
   role: 'user' | 'moderator' | 'admin';
