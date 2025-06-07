@@ -23,21 +23,22 @@ export class AuthController {
     return { message: 'Rate limited and authenticated' };
   }
 
+  @Get('validateToken')
   @UseGuards(AuthGuard('jwt'))
+  async validateToken(@Body() token: string) {
+    return this.authService.validateToken(token);
+  }
+
+  // @UseGuards(AuthGuard('jwt'))
   @Post('signup')
   async signup(@Body() userBody: SigninUserDto) {
     return this.authService.signup(userBody);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @Post('signin')
   async signin(@Body() userBody: SigninUserDto) {
     return this.authService.signin(userBody);
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Get('validateToken')
-  async validateToken(@Body() token: string) {
-    return this.authService.validateToken(token);
-  }
 }

@@ -1,13 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ type: MongooseSchema.Types.ObjectId })
-  _id: MongooseSchema.Types.ObjectId;
-
   @Prop({ required: true, unique: true })
   email: string;
 
@@ -30,7 +27,7 @@ export class User {
   interests: string[];
 
   @Prop()
-  provider?: 'google' | 'facebook' | 'twitter' | 'credentials';
+  provider?: 'google' | 'credentials';
 
   @Prop()
   providerId?: string;

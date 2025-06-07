@@ -24,7 +24,7 @@ const rateLimit = parseInt(process.env.RATE_LIMIT_MAX!, 10);
         },
       ],
     }),
-    RedisModule,
+    // RedisModule,
     AuthModule,
     UserModule,
   ],

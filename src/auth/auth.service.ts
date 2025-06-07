@@ -33,8 +33,13 @@ export class AuthService {
   async signup(userBody: SigninUserDto): Promise<User> {
     const existing = await this.userService.findByEmail(userBody.email);
     if (existing) throw new BadRequestException('Email already in use');
-    const hashedPassword = bcrypt.hash(userBody.password, 10);
-    const userData = { ...userBody, password: hashedPassword };
+    const hashedPassword = await bcrypt.hash(userBody.password, 10);
+    // console.log('type of hash ', typeof hashedPassword, { hashedPassword });
+    const userData = {
+      ...userBody,
+      password: hashedPassword,
+      provider: 'credentials',
+    };
     return this.userService.createIfNotExists(userData);
   }
 
@@ -52,7 +57,16 @@ export class AuthService {
     return user;
   }
 
+  async createIfNotExists(userData: SigninUserDto): Promise<User> {
+    const existing = await this.userService.findByEmail(userData.email);
+    if (existing) return existing;
+    const newUser = new this.userModel(userData);
+    newUser.provider = 'credentials';
+    return newUser.save();
+  }
+
   async validateToken(token: string): Promise<User> {
+    console.log('VALIDATE TOKEN RUNNING');
     try {
       const decoded = this.jwtService.verify<JwtPayload>(token, {
         secret: this.configService.get<string>('AUTH_SECRET'),
