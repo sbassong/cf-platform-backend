@@ -1,12 +1,24 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+  HttpStatus,
+} from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User, UserDocument } from '../user/schemas/user.schema';
 import { SigninUserDto } from '../user/dto/signin-user-dto';
 import { Injectable } from '@nestjs/common';
+import { Response, Request } from 'express';
+
+// Extend Express Request interface to include 'user'
+interface RequestWithUser extends Request {
+  user?: any;
+}
 
 @Injectable()
 @Controller('auth')
@@ -14,7 +26,7 @@ import { Injectable } from '@nestjs/common';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    // @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
   @Get('profile')
@@ -29,16 +41,43 @@ export class AuthController {
     return this.authService.validateToken(token);
   }
 
-  // @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   @Post('signup')
   async signup(@Body() userBody: SigninUserDto) {
     return this.authService.signup(userBody);
   }
 
-  // @UseGuards(AuthGuard('jwt'))
+  // // @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('local'))
   @Post('signin')
-  async signin(@Body() userBody: SigninUserDto) {
-    return this.authService.signin(userBody);
+  async signin(
+    @Req() req: RequestWithUser,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    // At this point, the LocalStrategy has ALREADY validated the user.
+    // The user object is now available on `req.user`.
+    const accessToken = await this.authService.login(req.user);
+
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 3600000, // 1 hour
+    });
+
+    return req.user as object;
   }
 
+  @Post('signout')
+  signOut(@Res({ passthrough: true }) response: Response) {
+    // Clear the cookie by setting an expired date
+    response.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+    });
+
+    response.status(HttpStatus.OK).json({ message: 'Signed out successfully' });
+  }
 }

@@ -43,6 +43,12 @@ export class AuthService {
     return this.userService.createIfNotExists(userData);
   }
 
+  // ADD THIS NEW METHOD
+  login(user: User) {
+    const payload = { ...user, password: null };
+    return this.jwtService.sign(payload);
+  }
+
   async signin(userData: SigninUserDto): Promise<User> {
     const user = await this.userService.findByEmail(userData.email);
     if (!user)
@@ -90,9 +96,9 @@ export class AuthService {
     }
   }
 
-  // // most likely will be handled in frontend only
+  // most likely will be handled in frontend only
   // async signout(token: string): Promise<{ message: string }> { // switch when async logic added
-  // signout(token: string): Promise<{ message: string }> {
+  // // signout(token: string): Promise<{ message: string }> {
   //   // For stateless JWTs, there's no true "logout" unless you blacklist the token.
   //   // You can optionally store the token in a blacklist (e.g., Redis or DB) if needed.
   //   try {
@@ -108,4 +114,5 @@ export class AuthService {
   //     throw new UnauthorizedException('Invalid or expired token');
   //   }
   // }
+  // // }
 }
