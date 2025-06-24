@@ -34,7 +34,6 @@ export class AuthService {
     const existing = await this.userService.findByEmail(userBody.email);
     if (existing) throw new BadRequestException('Email already in use');
     const hashedPassword = await bcrypt.hash(userBody.password, 10);
-    // console.log('type of hash ', typeof hashedPassword, { hashedPassword });
     const userData = {
       ...userBody,
       password: hashedPassword,
@@ -43,7 +42,6 @@ export class AuthService {
     return this.userService.createIfNotExists(userData);
   }
 
-  // ADD THIS NEW METHOD
   login(user: User) {
     const payload = { ...user, password: null };
     return this.jwtService.sign(payload);
@@ -63,6 +61,24 @@ export class AuthService {
     return user;
   }
 
+  async provider(email: string): Promise<{ accessToken: string }> {
+    const user = await this.validateUserForSocialLogin(email);
+    const accessToken = this.login(user);
+    return { accessToken };
+  }
+
+  async validateUserForSocialLogin(email: string): Promise<User> {
+    // frontend/NextAuth already verified the user with Google,
+    // so we just need to find them in our database.
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException(
+        'Could not find user associated with this social account.',
+      );
+    }
+    return user;
+  }
+
   async createIfNotExists(userData: SigninUserDto): Promise<User> {
     const existing = await this.userService.findByEmail(userData.email);
     if (existing) return existing;
@@ -72,10 +88,9 @@ export class AuthService {
   }
 
   async validateToken(token: string): Promise<User> {
-    console.log('VALIDATE TOKEN RUNNING');
     try {
       const decoded = this.jwtService.verify<JwtPayload>(token, {
-        secret: this.configService.get<string>('AUTH_SECRET'),
+        secret: this.configService.get<string>('JWT_SECRET'),
       });
 
       const email = decoded?.email;
@@ -83,7 +98,6 @@ export class AuthService {
         throw new UnauthorizedException('Invalid token payload');
       }
 
-      // Optionally can further enhance above
       const user = await this.userService.findByEmail(email);
       if (!user) {
         throw new UnauthorizedException('User not found');
@@ -95,24 +109,4 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
-
-  // most likely will be handled in frontend only
-  // async signout(token: string): Promise<{ message: string }> { // switch when async logic added
-  // // signout(token: string): Promise<{ message: string }> {
-  //   // For stateless JWTs, there's no true "logout" unless you blacklist the token.
-  //   // You can optionally store the token in a blacklist (e.g., Redis or DB) if needed.
-  //   try {
-  //     const decoded = this.jwtService.verify<JwtPayload>(token, {
-  //       secret: this.configService.get<string>('AUTH_SECRET'),
-  //     });
-  //     // await this.redisService.blacklistToken(token); // If using Redis
-  //     // For now we just rely on frontend deleting the token
-
-  //     return { message: 'User logged out successfully' };
-  //   } catch (err) {
-  //     console.error('Token validation failed:', err);
-  //     throw new UnauthorizedException('Invalid or expired token');
-  //   }
-  // }
-  // // }
 }

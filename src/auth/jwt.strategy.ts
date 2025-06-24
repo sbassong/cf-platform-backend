@@ -5,7 +5,6 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 
-// The cookieExtractor function remains the same
 const cookieExtractor = (req: Request): string | null => {
   let token: string | null = null;
   if (req && req.cookies) {
@@ -14,12 +13,12 @@ const cookieExtractor = (req: Request): string | null => {
     ];
     token = cookieToken !== undefined ? cookieToken : null;
   }
+
   return token;
 };
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  // 2. Inject both ConfigService and UserService
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
@@ -28,25 +27,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: cookieExtractor,
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('AUTH_SECRET'),
+      secretOrKey: configService.get<string>('JWT_SECRET'),
     });
   }
 
   /**
    * Passport first verifies the JWT's signature and expiration, then calls this method.
    * We now fetch the user from the database to ensure they still exist.
-   * The returned user object will be attached to the request as `req.user`.
    */
-  async validate(payload: { sub: string; username: string }): Promise<any> {
-    const user = await this.userService.findById(payload.sub);
+  async validate(payload: { _doc: { _id: string } }): Promise<any> {
+    const userId = payload._doc._id;
+    const user = await this.userService.findById(userId);
 
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
-
-    // Return sanitized user object
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = user;
-    return result;
+    const { password, ...sanitizedUser } = user;
+    return sanitizedUser;
   }
 }
