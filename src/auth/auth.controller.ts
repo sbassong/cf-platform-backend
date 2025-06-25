@@ -41,7 +41,6 @@ export class AuthController {
     return this.authService.validateToken(token);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('signup')
   async signUp(@Body() userBody: SigninUserDto) {
     return this.authService.signup(userBody);
@@ -59,6 +58,7 @@ export class AuthController {
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
       maxAge: 3600 * 24 * 1000 * 7, // 7 days
     });
@@ -87,7 +87,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
-      maxAge: 3600 * 24 * 1000 * 7, // 7 days
+      maxAge: 3600 * 24 * 1000 * 7,
     });
 
     return { user }; // Return the user data
