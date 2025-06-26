@@ -1,0 +1,106 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Profile, ProfileDocument } from './schemas/profile.schema';
+import { UserDocument } from '../user/schemas/user.schema';
+
+@Injectable()
+export class ProfileService {
+  constructor(
+    @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
+  ) {}
+
+  async findById(id: string): Promise<Profile> {
+    const profile = await this.profileModel.findById(id);
+    if (!profile) {
+      throw new NotFoundException('Profile not found.');
+    }
+    return profile;
+  }
+
+  async findByUserId(userId: string): Promise<Profile | null> {
+    return this.profileModel.findOne({ userId }).exec();
+  }
+
+  async findByUsername(username: string): Promise<Profile | null> {
+    return this.profileModel
+      .findOne({ username: username.toLowerCase() })
+      .exec();
+  }
+
+  async isUsernameTaken(username: string): Promise<boolean> {
+    const profile = await this.profileModel.findOne({
+      username: username.toLowerCase(),
+    });
+    return !!profile;
+  }
+
+  async create(profileData: Partial<Profile>): Promise<ProfileDocument> {
+    const newProfile = new this.profileModel(profileData);
+    return newProfile.save();
+  }
+
+  async update(
+    profileId: string,
+    updates: Partial<Profile>,
+    user: UserDocument,
+  ): Promise<Profile | null> {
+    const profileToUpdate = await this.profileModel.findById(profileId);
+
+    if (!profileToUpdate) {
+      throw new NotFoundException('Profile not found.');
+    }
+
+    // ensures the user owns the profile.
+    if (profileToUpdate.userId.toString() !== (user._id as string).toString()) {
+      throw new ForbiddenException(
+        'You are not authorized to update this profile.',
+      );
+    }
+
+    // Prevent username from being changed after creation.
+    if (updates.username) {
+      throw new BadRequestException('Username cannot be changed.');
+    }
+
+    return this.profileModel.findByIdAndUpdate(profileId, updates, {
+      new: true,
+    });
+  }
+
+  /**
+   * Generates a unique username from a base name (like an email prefix or display name).
+   * If the base username is taken, it appends random numbers until a unique one is found.
+   */
+  async generateUniqueUsername(base: string): Promise<string> {
+    let username = base
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '') // Sanitize
+      .slice(0, 20); // Truncate
+
+    if (username.length < 3) {
+      username = `user${username}`;
+    }
+
+    let isTaken = await this.isUsernameTaken(username);
+    let attempts = 0;
+    while (isTaken && attempts < 5) {
+      const randomSuffix = Math.floor(100 + Math.random() * 900); // 3 rand digits
+      username = `${username.slice(0, 20)}_${randomSuffix}`;
+      isTaken = await this.isUsernameTaken(username);
+      attempts++;
+    }
+
+    // If it's still taken after 5 attempts, use a completely random one.
+    if (isTaken) {
+      username = `user_${Date.now()}`;
+    }
+
+    return username;
+  }
+}

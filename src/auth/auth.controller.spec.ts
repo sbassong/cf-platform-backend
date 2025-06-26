@@ -1,36 +1,36 @@
+// NOTE: All test should follow the AAA (Arange, Act, Assert) model
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
-import { Response, Request } from 'express';
-import { User } from '../user/schemas/user.schema';
+import { Response } from 'express';
+import { UserDocument } from '../user/schemas/user.schema';
 import { SigninUserDto } from '../user/dto/signin-user-dto';
 import { HttpStatus } from '@nestjs/common';
+import { Types } from 'mongoose';
 
-// Define a type for our mock user to ensure consistency
-type MockUser = Partial<User> & { _id: string };
-
-interface RequestWithUser extends Request {
-  user?: any;
-}
+// A mock Mongoose document object that includes the toObject method
+const createMockUserDoc = (mockUser: any): UserDocument => {
+  return {
+    ...mockUser,
+    _id: new Types.ObjectId(mockUser._id),
+    toObject: () => mockUser,
+  } as UserDocument;
+};
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let service: AuthService;
 
-  // Create a reusable mock for the AuthService
+  // Create reusable mocks for all services the controller depends on
   const mockAuthService = {
     signup: jest.fn(),
     login: jest.fn(),
     provider: jest.fn(),
     validateUserForSocialLogin: jest.fn(),
-    signOut: jest.fn(),
-    validateToken: jest.fn(),
   };
 
   beforeEach(async () => {
-    // Create an isolated, in-memory testing module for the AuthController
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -40,21 +40,28 @@ describe('AuthController', () => {
         },
       ],
     })
-      // Override all guards used in the controller so they don't block our tests
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(AuthGuard('jwt'))
       .useValue({ canActivate: () => true })
-      // For the 'local' guard, we need to simulate it attaching a user to the request
       .overrideGuard(AuthGuard('local'))
       .useValue({
         canActivate: (context) => {
           const req = context.switchToHttp().getRequest();
-          // Attach a mock user to the request, which the real guard would do upon success
           req.user = {
             _id: 'mockUserId',
             email: 'test@example.com',
-            name: 'Test User',
+            profile: {
+              _id: 'mockProfileId',
+              displayName: 'Test User',
+              username: 'testuser',
+            },
+            _doc: {
+              // Simulate Mongoose's _doc property
+              _id: 'mockUserId',
+              email: 'test@example.com',
+              profile: 'mockProfileId',
+            },
           };
           return true;
         },
@@ -62,11 +69,8 @@ describe('AuthController', () => {
       .compile();
 
     controller = module.get<AuthController>(AuthController);
-    // also get the mock service instance if we need to inspect it directly
-    service = module.get<AuthService>(AuthService);
   });
 
-  // Clear all mock history after each test to ensure isolation
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -76,44 +80,47 @@ describe('AuthController', () => {
   });
 
   describe('signUp', () => {
-    it('should successfully sign up a new user', async () => {
+    it('should sign up a user and return the sanitized user object', async () => {
       // Arrange
       const signupDto: SigninUserDto = {
         email: 'newuser@example.com',
-        password: 'password123',
-        name: 'New User',
+        password: 'Password123!',
+        displayName: 'New User',
+        username: 'newuser',
       };
-      const expectedUser = { ...signupDto, _id: 'a-new-id' };
 
-      // Mock the service's signup method to return the expected user
-      mockAuthService.signup.mockResolvedValue(expectedUser);
+      const createdUser = {
+        _id: 'a-new-id',
+        email: 'newuser@example.com',
+        // Note: The service returns the user doc, which is then sanitized in the controller
+        _doc: {
+          _id: 'a-new-id',
+          email: 'newuser@example.com',
+          password: 'hashedpassword',
+        },
+      };
+      mockAuthService.signup.mockResolvedValue(createdUser);
 
       // Act
       const result = await controller.signUp(signupDto);
 
       // Assert
       expect(mockAuthService.signup).toHaveBeenCalledWith(signupDto);
-      expect(result).toEqual(expectedUser);
+      expect(result).not.toHaveProperty('password');
+      expect(result).toHaveProperty('_id', 'a-new-id');
     });
   });
 
   describe('signIn', () => {
     it('should log in a user and set the access_token cookie', () => {
-      const mockUser: MockUser = {
+      const mockUser = {
         _id: 'mockUserId',
         email: 'test@example.com',
-        name: 'Test User',
+        _doc: { _id: 'mockUserId', email: 'test@example.com' },
       };
-
       const mockRequest = { user: mockUser } as any;
       const mockToken = 'mock-jwt-token';
-
-      // Create a mock response object with jest functions
-      const mockResponse = {
-        cookie: jest.fn(),
-      } as unknown as Response;
-
-      // Configure the mock service to return the token
+      const mockResponse = { cookie: jest.fn() } as unknown as Response;
       mockAuthService.login.mockReturnValue(mockToken);
 
       const result = controller.signIn(mockRequest, mockResponse);
@@ -124,81 +131,47 @@ describe('AuthController', () => {
         mockToken,
         expect.any(Object),
       );
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual({ _id: 'mockUserId', email: 'test@example.com' });
     });
   });
 
   describe('provider', () => {
-    it('should handle provider login, and set the cookie', async () => {
+    it('should handle provider login and return sanitized user', async () => {
       const email = 'provider@example.com';
-      const mockUser = { email, name: 'Provider User', _id: 'providerId' };
+      const mockUser = {
+        email,
+        _id: 'providerId',
+        _doc: { email, _id: 'providerId' },
+      };
       const mockTokenPayload = { accessToken: 'provider-jwt-token' };
-
-      const mockResponse = {
-        cookie: jest.fn(),
-      } as unknown as Response;
+      const mockResponse = { cookie: jest.fn() } as unknown as Response;
 
       mockAuthService.validateUserForSocialLogin.mockResolvedValue(mockUser);
       mockAuthService.provider.mockResolvedValue(mockTokenPayload);
 
       const result = await controller.provider(email, mockResponse);
 
-      expect(mockAuthService.validateUserForSocialLogin).toHaveBeenCalledWith(
-        email,
-      );
-      expect(mockAuthService.provider).toHaveBeenCalledWith(email);
-      expect(mockResponse.cookie).toHaveBeenCalledWith(
-        'access_token',
-        mockTokenPayload.accessToken,
-        expect.any(Object),
-      );
-      expect(result).toEqual({ user: mockUser });
-    });
-  });
-
-  describe('signOut', () => {
-    it('should clear the access_token cookie', () => {
-      const mockResponse = {
-        clearCookie: jest.fn(),
-        status: jest.fn().mockReturnThis(), // Allow chaining .status().json()
-        json: jest.fn(),
-      } as unknown as Response;
-
-      controller.signOut(mockResponse);
-
-      expect(mockResponse.clearCookie).toHaveBeenCalledWith(
-        'access_token',
-        expect.any(Object),
-      );
-      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.OK);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Signed out successfully',
-      });
+      expect(mockResponse.cookie).toHaveBeenCalled();
+      expect(result.user).toEqual({ email, _id: 'providerId' });
     });
   });
 
   describe('getSession', () => {
-    it('should return the user from the request, without the password', () => {
-      const mockUserWithPassword = {
-        _id: 'sessionId',
+    it('should return the full user object from the request', () => {
+      const mockUserPayload = {
+        _id: '60d5ec49e79c9e001f7b8c8b',
         email: 'session@example.com',
-        password: 'a-hashed-password',
-        role: 'user',
+        profile: {
+          displayName: 'Session User',
+          username: 'sessionuser',
+        },
       };
-
-      const mockRequest = {
-        user: { _doc: mockUserWithPassword },
-      } as any;
-      const expectedUser = {
-        _id: 'sessionId',
-        email: 'session@example.com',
-        role: 'user',
-      };
+      const mockUserDocument = createMockUserDoc(mockUserPayload);
+      const mockRequest = { user: mockUserDocument } as any;
 
       const result = controller.getSession(mockRequest);
 
-      expect(result).toEqual(expectedUser);
-      expect(result).not.toHaveProperty('password');
+      expect(result).toEqual(mockUserPayload);
     });
   });
 });

@@ -4,6 +4,7 @@ export class OauthUserDto {
   @IsEmail()
   email: string;
 
+  // This will be used as the initial displayName
   @IsOptional()
   @IsString()
   name?: string;
