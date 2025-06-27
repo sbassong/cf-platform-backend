@@ -13,7 +13,12 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
   // Passport automatically calls this method with the credentials from the request body.
   async validate(email: string, password_from_request: string): Promise<any> {
-    const userBody: SigninUserDto = { email, password: password_from_request };
+    const userBody: SigninUserDto = {
+      email,
+      password: password_from_request,
+      displayName: '',
+      username: '',
+    };
 
     const user = await this.authService.signin(userBody);
 
@@ -22,8 +27,9 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         'Invalid credentials provided to strategy.',
       );
     }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...sanitizedUser } = user;
+    const { password, ...sanitizedUser } = (user as any)._doc;
     return sanitizedUser;
   }
 }

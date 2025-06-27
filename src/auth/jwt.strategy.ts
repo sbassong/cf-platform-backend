@@ -6,16 +6,18 @@ import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 
 const cookieExtractor = (req: Request): string | null => {
-  let token: string | null = null;
   if (req && req.cookies) {
-    const cookieToken = (req.cookies as Record<string, string> | undefined)?.[
-      'access_token'
-    ];
-    token = cookieToken !== undefined ? cookieToken : null;
+    return req.cookies['access_token'] || null;
   }
-
-  return token;
+  return null;
 };
+
+interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+  profileId: string;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -23,7 +25,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     super({
       jwtFromRequest: cookieExtractor,
       ignoreExpiration: false,
@@ -31,19 +32,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  /**
-   * Passport first verifies the JWT's signature and expiration, then calls this method.
-   * We now fetch the user from the database to ensure they still exist.
-   */
-  async validate(payload: { _doc: { _id: string } }): Promise<any> {
-    const userId = payload._doc._id;
-    const user = await this.userService.findById(userId);
+  async validate(payload: JwtPayload): Promise<any> {
+    // Passport first verifies the JWT's signature and expiration.
+    // fetch existing user object to be attached to request.
+    const user = await this.userService.findById(payload.sub);
 
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...sanitizedUser } = user;
+
+    // return the sanitized user document (which includes the populated profile)
+    const { password, ...sanitizedUser } = (user as any)._doc;
     return sanitizedUser;
   }
 }

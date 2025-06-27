@@ -2,24 +2,17 @@ import * as bcrypt from 'bcryptjs';
 import {
   Injectable,
   UnauthorizedException,
-  BadRequestException,
+  // BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ProfileService } from '../profile/profile.service';
 import { User, UserDocument } from '../user/schemas/user.schema';
 import { SigninUserDto } from '../user/dto/signin-user-dto';
-
-interface JwtPayload {
-  email: string;
-  name?: string;
-  image?: string;
-  provider?: string;
-  iat?: number;
-  exp?: number;
-}
+import { InjectConnection } from '@nestjs/mongoose';
+import { Connection, Schema as MongooseSchema } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -27,85 +20,106 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly profileService: ProfileService,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async signup(userBody: SigninUserDto): Promise<User> {
-    const existing = await this.userService.findByEmail(userBody.email);
-    if (existing) throw new BadRequestException('Email already in use');
-    const hashedPassword = await bcrypt.hash(userBody.password, 10);
-    const userData = {
-      ...userBody,
-      password: hashedPassword,
-      provider: 'credentials',
-    };
-    return this.userService.createIfNotExists(userData);
+    const { email, password, displayName, username } = userBody;
+
+    const existingEmail = await this.userService.findByEmail(email);
+    if (existingEmail) {
+      throw new ConflictException('Email already in use');
+    }
+
+    const existingUsername =
+      await this.profileService.isUsernameTaken(username);
+    if (existingUsername) {
+      throw new ConflictException('Username is already taken');
+    }
+
+    const session = await this.connection.startSession();
+    session.startTransaction();
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser = await this.userService.create(
+        {
+          email,
+          password: hashedPassword,
+          provider: 'credentials',
+        },
+        session,
+      );
+
+      const newProfile = await this.profileService.create({
+        displayName,
+        username,
+        userId: newUser._id as MongooseSchema.Types.ObjectId,
+      });
+
+      newUser.profile = newProfile._id as MongooseSchema.Types.ObjectId;
+      await newUser.save({ session });
+
+      await session.commitTransaction();
+      return newUser;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
-  login(user: User) {
-    const payload = { ...user, password: null };
+  login(user: UserDocument) {
+    const payload = {
+      sub: user._id,
+      email: user.email,
+      role: user.role,
+      profileId: user.profile,
+    };
+
     return this.jwtService.sign(payload);
   }
 
-  async signin(userData: SigninUserDto): Promise<User> {
+  async signin(
+    userData: Pick<SigninUserDto, 'email' | 'password'>,
+  ): Promise<User> {
     const user = await this.userService.findByEmail(userData.email);
-    if (!user)
-      throw new UnauthorizedException(
-        'There was an error while logging you in. Please try again.',
-      );
-    const isValid = await bcrypt.compare(userData.password, user.password!); // may need to revisit validating password without ! await needed for next line
-    if (!isValid)
-      throw new UnauthorizedException(
-        'There was an error while logging you in. Please try again.',
-      );
+    if (!user || !user.password) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+    const isValid = await bcrypt.compare(userData.password, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    return user;
+  }
+
+  async validateUserForSocialLogin(email: string): Promise<User> {
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
     return user;
   }
 
   async provider(email: string): Promise<{ accessToken: string }> {
     const user = await this.validateUserForSocialLogin(email);
-    const accessToken = this.login(user);
+    const accessToken = this.login(user as UserDocument);
     return { accessToken };
-  }
-
-  async validateUserForSocialLogin(email: string): Promise<User> {
-    // frontend/NextAuth already verified the user with Google,
-    // so we just need to find them in our database.
-    const user = await this.userService.findByEmail(email);
-    if (!user) {
-      throw new UnauthorizedException(
-        'Could not find user associated with this social account.',
-      );
-    }
-    return user;
-  }
-
-  async createIfNotExists(userData: SigninUserDto): Promise<User> {
-    const existing = await this.userService.findByEmail(userData.email);
-    if (existing) return existing;
-    const newUser = new this.userModel(userData);
-    newUser.provider = 'credentials';
-    return newUser.save();
   }
 
   async validateToken(token: string): Promise<User> {
     try {
-      const decoded = this.jwtService.verify<JwtPayload>(token, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-      });
-
-      const email = decoded?.email;
-      if (!email) {
-        throw new UnauthorizedException('Invalid token payload');
-      }
-
-      const user = await this.userService.findByEmail(email);
+      const decoded = this.jwtService.verify<{ sub: string }>(token);
+      const user = await this.userService.findById(decoded.sub);
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
-
       return user;
     } catch (err) {
-      console.error('Token validation failed:', err);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
