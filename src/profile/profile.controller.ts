@@ -2,7 +2,7 @@ import { Controller, Get, Param, Put, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ProfileService } from './profile.service';
 import { Profile } from './schemas/profile.schema';
-import { GetUser } from 'src/auth/get-user-decorator';
+import { GetUser } from '../auth/get-user-decorator';
 import { UserDocument } from '../user/schemas/user.schema';
 
 @Controller('profiles')
