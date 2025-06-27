@@ -27,8 +27,9 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         'Invalid credentials provided to strategy.',
       );
     }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...sanitizedUser } = user;
+    const { password, ...sanitizedUser } = (user as any)._doc;
     return sanitizedUser;
   }
 }

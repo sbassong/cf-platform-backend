@@ -41,7 +41,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found.');
     }
 
-    // return the full user document (which includes the populated profile)
-    return user;
+    // return the sanitized user document (which includes the populated profile)
+    const { password, ...sanitizedUser } = (user as any)._doc;
+    return sanitizedUser;
   }
 }

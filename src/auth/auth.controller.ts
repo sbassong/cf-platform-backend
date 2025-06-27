@@ -53,9 +53,7 @@ export class AuthController {
       maxAge: 3600 * 24 * 1000 * 7, // 7 days
     });
 
-    // req.user is the full user document from the local strategy
-    const { password, ...sanitizedUser } = (req.user as any)._doc;
-    return sanitizedUser;
+    return req.user;
   }
 
   @Post('provider')
@@ -100,12 +98,11 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Get('session')
   getSession(@Req() req: RequestWithUser) {
-    // The user object from the JwtStrategy already has the profile populated
-    // and the password field is not included by default in the toObject() serialization
+    // The sanitized user object from the JwtStrategy already has the profile populated
     if (!req.user) {
       throw new UnauthorizedException('User not found in request');
     }
 
-    return req.user.toObject() as object;
+    return req.user as object;
   }
 }
