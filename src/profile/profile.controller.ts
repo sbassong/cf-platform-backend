@@ -1,4 +1,14 @@
-import { Controller, Get, Param, Put, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Put,
+  Body,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from '@nestjs/passport';
 import { ProfileService } from './profile.service';
 import { Profile } from './schemas/profile.schema';
@@ -32,5 +42,38 @@ export class ProfileController {
     @GetUser() user: UserDocument,
   ) {
     return this.profileService.update(profileId, data, user);
+  }
+
+  /**
+   * Generates a secure, pre-signed URL for uploading an avatar.
+   * The client will receive this URL and use it to upload the file directly to S3.
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Post('avatar-upload-url')
+  async getAvatarUploadUrl(
+    @GetUser() user: UserDocument,
+    @Body('contentType') contentType: string,
+  ) {
+    if (!contentType) {
+      throw new BadRequestException('contentType is required.');
+    }
+
+    const key = `avatars/${user._id}/${uuidv4()}.jpeg`;
+    return this.profileService.getAvatarUploadUrl(key, contentType);
+  }
+
+  // New endpoint for banner uploads
+  @UseGuards(AuthGuard('jwt'))
+  @Post('banner-upload-url')
+  async getBannerUploadUrl(
+    @GetUser() user: UserDocument,
+    @Body('contentType') contentType: string,
+  ) {
+    if (!contentType) {
+      throw new BadRequestException('contentType is required.');
+    }
+
+    const key = `banners/${user._id}/${uuidv4()}.jpeg`;
+    return this.profileService.getBannerUploadUrl(key, contentType);
   }
 }
