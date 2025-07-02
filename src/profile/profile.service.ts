@@ -4,6 +4,8 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
@@ -11,9 +13,14 @@ import { UserDocument } from '../user/schemas/user.schema';
 
 @Injectable()
 export class ProfileService {
+  private readonly s3Client: S3Client;
   constructor(
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
-  ) {}
+  ) {
+    this.s3Client = new S3Client({
+      region: process.env.AWS_REGION,
+    });
+  }
 
   async findById(id: string): Promise<Profile> {
     const profile = await this.profileModel.findById(id);
@@ -52,6 +59,9 @@ export class ProfileService {
   ): Promise<Profile | null> {
     const profileToUpdate = await this.profileModel.findById(profileId);
 
+    // console.log({ profileToUpdate});
+    // console.log({ updates });
+
     if (!profileToUpdate) {
       throw new NotFoundException('Profile not found.');
     }
@@ -68,9 +78,44 @@ export class ProfileService {
       throw new BadRequestException('Username cannot be changed.');
     }
 
-    return this.profileModel.findByIdAndUpdate(profileId, updates, {
+    return await this.profileModel.findByIdAndUpdate(profileId, updates, {
       new: true,
     });
+  }
+
+  /**
+   * Generates a pre-signed URL for uploading a file to S3.
+   * @param key - The unique key (file path) for the object in S3.
+   */
+  async getAvatarUploadUrl(key: string, contentType: string) {
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3Client, command, {
+      expiresIn: 600,
+    });
+
+    const publicUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+    return { uploadUrl, publicUrl };
+  }
+
+  async getBannerUploadUrl(key: string, contentType: string) {
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3Client, command, {
+      expiresIn: 600,
+    });
+    const publicUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+    return { uploadUrl, publicUrl };
   }
 
   /**

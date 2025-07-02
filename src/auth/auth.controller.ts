@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { SigninUserDto } from '../user/dto/signin-user-dto';
@@ -96,6 +96,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Get('session')
   getSession(@Req() req: RequestWithUser) {
     // The sanitized user object from the JwtStrategy already has the profile populated
