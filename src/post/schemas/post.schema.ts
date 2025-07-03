@@ -21,8 +21,8 @@ export class Post {
   @Prop({ required: true, trim: true })
   content: string;
 
-  @Prop()
-  imageUrl?: string;
+  @Prop({ type: String, default: undefined })
+  imageUrl?: string | null;
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],

@@ -8,7 +8,7 @@ import { AuthModule } from '../auth/auth.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
-    AuthModule, // Add AuthModule to imports
+    AuthModule,
   ],
   controllers: [PostsController],
   providers: [PostsService],

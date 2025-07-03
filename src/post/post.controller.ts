@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   UseGuards,
+  BadRequestException,
   Req,
 } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from '@nestjs/passport';
 import { PostsService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { GetUser } from '../auth/get-user-decorator';
 import { UserDocument } from '../user/schemas/user.schema';
 
@@ -44,15 +47,29 @@ export class PostsController {
   @UseGuards(AuthGuard('jwt'))
   update(
     @Param('id') id: string,
-    @Body('content') content: string,
+    @Body() updatePostDto: UpdatePostDto,
     @GetUser() user: UserDocument,
   ) {
-    return this.postsService.update(id, content, user);
+    return this.postsService.update(id, updatePostDto, user);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   remove(@Param('id') id: string, @GetUser() user: UserDocument) {
     return this.postsService.remove(id, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('image-upload-url')
+  async getPostImageUploadUrl(
+    @GetUser() user: UserDocument,
+    @Body('contentType') contentType: string,
+  ) {
+    if (!contentType) {
+      throw new BadRequestException('contentType is required.');
+    }
+
+    const key = `posts/${user._id}/${uuidv4()}.jpeg`;
+    return this.postsService.getPostImageUploadUrl(key, contentType);
   }
 }

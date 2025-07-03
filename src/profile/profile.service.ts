@@ -59,14 +59,10 @@ export class ProfileService {
   ): Promise<Profile | null> {
     const profileToUpdate = await this.profileModel.findById(profileId);
 
-    // console.log({ profileToUpdate});
-    // console.log({ updates });
-
     if (!profileToUpdate) {
       throw new NotFoundException('Profile not found.');
     }
 
-    // ensures the user owns the profile.
     if (profileToUpdate.userId.toString() !== (user._id as string).toString()) {
       throw new ForbiddenException(
         'You are not authorized to update this profile.',

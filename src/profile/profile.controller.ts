@@ -62,7 +62,6 @@ export class ProfileController {
     return this.profileService.getAvatarUploadUrl(key, contentType);
   }
 
-  // New endpoint for banner uploads
   @UseGuards(AuthGuard('jwt'))
   @Post('banner-upload-url')
   async getBannerUploadUrl(
