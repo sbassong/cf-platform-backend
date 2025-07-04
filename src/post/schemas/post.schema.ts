@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Profile, ProfileDocument } from '../../profile/schemas/profile.schema'; // Import ProfileDocument
+import { GroupDocument } from '../../group/schemas/group.schema';
 
 export type PostDocument = Post & Document;
 
@@ -20,6 +21,9 @@ export class Post {
 
   @Prop({ required: true, trim: true })
   content: string;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Group' })
+  group?: GroupDocument; // Add the optional group reference
 
   @Prop({ type: String, default: undefined })
   imageUrl?: string | null;

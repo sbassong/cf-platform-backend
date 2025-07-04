@@ -72,4 +72,9 @@ export class PostsController {
     const key = `posts/${user._id}/${uuidv4()}.jpeg`;
     return this.postsService.getPostImageUploadUrl(key, contentType);
   }
+
+  @Get('by-group/:groupId')
+  findByGroup(@Param('groupId') groupId: string) {
+    return this.postsService.findByGroup(groupId);
+  }
 }

@@ -108,4 +108,12 @@ export class PostsService {
 
     return { uploadUrl, publicUrl };
   }
+
+  async findByGroup(groupId: string): Promise<Post[]> {
+    return this.postModel
+      .find({ group: groupId })
+      .populate('author', 'displayName username avatarUrl')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
 }
