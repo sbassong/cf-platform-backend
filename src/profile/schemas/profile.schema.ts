@@ -34,6 +34,27 @@ export class Profile {
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   userId: MongooseSchema.Types.ObjectId;
+
+  @Prop({
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
+    default: [],
+  })
+  following: MongooseSchema.Types.ObjectId[];
+
+  @Prop({
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
+    default: [],
+  })
+  followers: MongooseSchema.Types.ObjectId[];
+
+  // Add virtuals for counts
+  get followingCount(): number {
+    return this.following.length;
+  }
+
+  get followersCount(): number {
+    return this.followers.length;
+  }
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

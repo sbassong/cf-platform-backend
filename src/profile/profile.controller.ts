@@ -75,4 +75,19 @@ export class ProfileController {
     const key = `banners/${user._id}/${uuidv4()}.jpeg`;
     return this.profileService.getBannerUploadUrl(key, contentType);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/follow')
+  async follow(@Param('id') profileId: string, @GetUser() user: UserDocument) {
+    return this.profileService.follow(profileId, user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/unfollow')
+  async unfollow(
+    @Param('id') profileId: string,
+    @GetUser() user: UserDocument,
+  ) {
+    return this.profileService.unfollow(profileId, user);
+  }
 }

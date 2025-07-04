@@ -144,4 +144,54 @@ export class ProfileService {
 
     return username;
   }
+
+  async follow(profileToFollowId: string, user: UserDocument): Promise<Profile> {
+    const userProfileId = user.profile.toString();
+
+    if (profileToFollowId === userProfileId) {
+      throw new BadRequestException("You cannot follow yourself.");
+    }
+    
+    // Add the user to the target profile's followers list
+    await this.profileModel.updateOne(
+      { _id: profileToFollowId },
+      { $addToSet: { followers: userProfileId } } // Use $addToSet to prevent duplicates
+    );
+
+    // Add the target profile to the current user's following list
+    const updatedProfile = await this.profileModel.findByIdAndUpdate(
+      userProfileId,
+      { $addToSet: { following: profileToFollowId } },
+      { new: true },
+    );
+
+    if (!updatedProfile) {
+      throw new NotFoundException('Profile not found.');
+    }
+
+    return updatedProfile;
+  }
+
+  async unfollow(profileToUnfollowId: string, user: UserDocument): Promise<Profile> {
+    const userProfileId = user.profile.toString();
+
+    // Remove the user from the target profile's followers list
+    await this.profileModel.updateOne(
+      { _id: profileToUnfollowId },
+      { $pull: { followers: userProfileId } } // Use $pull to remove
+    );
+
+    // Remove the target profile from the current user's following list
+    const updatedProfile = await this.profileModel.findByIdAndUpdate(
+      userProfileId,
+      { $pull: { following: profileToUnfollowId } },
+      { new: true }
+    );
+
+    if (!updatedProfile) {
+      throw new NotFoundException('Profile not found.');
+    }
+
+    return updatedProfile;
+  }
 }

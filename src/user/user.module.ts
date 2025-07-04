@@ -12,6 +12,6 @@ import { ProfileModule } from '../profile/profile.module';
   ],
   controllers: [UserController],
   providers: [UserService],
-  exports: [UserService], // Export UserService for AuthModule
+  exports: [UserService],
 })
 export class UserModule {}
