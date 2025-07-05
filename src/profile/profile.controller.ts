@@ -79,7 +79,8 @@ export class ProfileController {
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/follow')
   async follow(@Param('id') profileId: string, @GetUser() user: UserDocument) {
-    return this.profileService.follow(profileId, user);
+    const userProfileId = (user.profile as any)._id.toString();
+    return this.profileService.follow(profileId, userProfileId);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -88,6 +89,7 @@ export class ProfileController {
     @Param('id') profileId: string,
     @GetUser() user: UserDocument,
   ) {
-    return this.profileService.unfollow(profileId, user);
+    const userProfileId = (user.profile as any)._id.toString();
+    return this.profileService.unfollow(profileId, userProfileId);
   }
 }
