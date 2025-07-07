@@ -18,7 +18,7 @@ import { AuthModule } from '../auth/auth.module';
     ]),
     AuthModule,
   ],
-  controllers: [MessagingGateway, MessagingController],
-  providers: [MessagingService],
+  controllers: [MessagingController],
+  providers: [MessagingService, MessagingGateway],
 })
 export class MessagingModule {}

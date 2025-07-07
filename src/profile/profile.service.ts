@@ -196,4 +196,24 @@ export class ProfileService {
 
     return updatedProfile;
   }
+
+  async search(query: string, currentUserId: string): Promise<Profile[]> {
+    if (!query) {
+      return [];
+    }
+    const regex = new RegExp(query, 'i'); // Case-insensitive search
+    return this.profileModel
+      .find({
+        $and: [
+          { _id: { $ne: currentUserId } }, // Exclude the current user
+          {
+            $or: [
+              { displayName: { $regex: regex } },
+              { username: { $regex: regex } },
+            ],
+          },
+        ],
+      })
+      .limit(10);
+  }
 }

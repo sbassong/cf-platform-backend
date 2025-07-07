@@ -5,6 +5,7 @@ import {
   Param,
   Put,
   Body,
+  Query,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
@@ -18,6 +19,13 @@ import { UserDocument } from '../user/schemas/user.schema';
 @Controller('profiles')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('search')
+  async search(@Query('q') query: string, @GetUser() user: UserDocument) {
+    const userProfileId = (user.profile as any)._id.toString();
+    return this.profileService.search(query, userProfileId);
+  }
 
   @Get(':username')
   async findByUsername(@Param('username') username: string) {

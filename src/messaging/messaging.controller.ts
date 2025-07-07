@@ -9,22 +9,22 @@ import { UserDocument } from '../user/schemas/user.schema';
 export class MessagingController {
   constructor(private readonly messagingService: MessagingService) {}
 
-  @Get('conversations')
-  getConversations(@GetUser() user: UserDocument) {
-    return this.messagingService.getConversationsForUser(
-      user.profile.toString(),
-    );
-  }
-
   @Post('conversations')
   findOrCreateConversation(
     @GetUser() user: UserDocument,
     @Body('otherUserId') otherUserId: string,
   ) {
+    const userProfileId = (user.profile as any)._id.toString();
     return this.messagingService.findOrCreateConversation(
-      user.profile.toString(),
+      userProfileId,
       otherUserId,
     );
+  }
+
+  @Get('conversations')
+  getConversations(@GetUser() user: UserDocument) {
+    const userProfileId = (user.profile as any)._id.toString();
+    return this.messagingService.getConversationsForUser(userProfileId);
   }
 
   @Get('conversations/:id/messages')
