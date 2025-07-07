@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { ProfileDocument } from '../../profile/schemas/profile.schema';
 
@@ -34,11 +34,12 @@ export class Group {
   @Prop()
   bannerUrl?: string;
 
-  // Virtual property to get the member count
-  get memberCount(): number {
-    // The owner is also a member
-    return this.members.length + 1;
-  }
+  @Virtual({
+    get: function () {
+      return this.members?.length;
+    },
+  })
+  memberCount: number;
 }
 
 export const GroupSchema = SchemaFactory.createForClass(Group);

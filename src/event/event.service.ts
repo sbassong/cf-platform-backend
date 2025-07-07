@@ -43,6 +43,7 @@ export class EventsService {
     return this.eventModel
       .find()
       .populate('organizer', 'displayName username avatarUrl')
+      .populate('attendees', '_id username displayName avatarUrl')
       .sort({ date: 1 }) // Sort by upcoming date
       .exec();
   }

@@ -41,6 +41,7 @@ export class GroupsService {
     return this.groupModel
       .find()
       .populate('owner', 'displayName username avatarUrl')
+      .populate('members', '_id username displayName avatarUrl')
       .exec();
   }
 
@@ -62,7 +63,7 @@ export class GroupsService {
       .find({
         $or: [{ owner: profileId }, { members: profileId }],
       })
-      .populate('owner', 'displayName username avatarUrl') // Populate owner for card display
+      .populate('owner', 'displayName username avatarUrl')
       .sort({ createdAt: -1 })
       .exec();
   }

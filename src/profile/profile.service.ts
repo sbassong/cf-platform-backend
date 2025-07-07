@@ -37,8 +37,8 @@ export class ProfileService {
   async findByUsername(username: string): Promise<Profile | null> {
     return this.profileModel
       .findOne({ username: username.toLowerCase() })
-      .populate('followers', '_id')
-      .populate('following', '_id')
+      .populate('followers', '_id username displayName avatarUrl')
+      .populate('following', '_id username displayName avatarUrl')
       .exec();
   }
 

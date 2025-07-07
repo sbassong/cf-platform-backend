@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Profile, ProfileDocument } from '../../profile/schemas/profile.schema'; // Import ProfileDocument
 import { GroupDocument } from '../../group/schemas/group.schema';
@@ -34,9 +34,12 @@ export class Post {
   })
   likes: MongooseSchema.Types.ObjectId[];
 
-  get likesCount(): number {
-    return this.likes.length;
-  }
+  @Virtual({
+    get: function () {
+      return this.likes?.length;
+    },
+  })
+  likesCount: number;
 
   @Prop({ default: 0 })
   commentsCount: number;

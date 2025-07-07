@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { ProfileDocument } from '../../profile/schemas/profile.schema';
 
@@ -34,11 +34,12 @@ export class Event {
   @Prop()
   imageUrl?: string;
 
-  // Virtual property to get the attendee count
-  get attendeeCount(): number {
-    // The organizer is also an attendee
-    return this.attendees.length + 1;
-  }
+  @Virtual({
+    get: function () {
+      return this.attendees?.length;
+    },
+  })
+  attendeeCount: number;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

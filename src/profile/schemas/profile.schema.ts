@@ -1,9 +1,13 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type ProfileDocument = Profile & Document;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class Profile {
   @Prop({
     required: true,
@@ -47,14 +51,19 @@ export class Profile {
   })
   followers: MongooseSchema.Types.ObjectId[];
 
-  // Add virtuals for counts
-  get followingCount(): number {
-    return this.following.length;
-  }
+  @Virtual({
+    get: function () {
+      return this.following?.length;
+    },
+  })
+  followingCount: number;
 
-  get followersCount(): number {
-    return this.followers.length;
-  }
+  @Virtual({
+    get: function () {
+      return this.followers?.length;
+    },
+  })
+  followersCount: number;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);
