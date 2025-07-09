@@ -5,6 +5,7 @@ import {
   Param,
   Put,
   Body,
+  Query,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
@@ -18,6 +19,13 @@ import { UserDocument } from '../user/schemas/user.schema';
 @Controller('profiles')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('search')
+  async search(@Query('q') query: string, @GetUser() user: UserDocument) {
+    const userProfileId = (user.profile as any)._id.toString();
+    return this.profileService.search(query, userProfileId);
+  }
 
   @Get(':username')
   async findByUsername(@Param('username') username: string) {
@@ -62,7 +70,6 @@ export class ProfileController {
     return this.profileService.getAvatarUploadUrl(key, contentType);
   }
 
-  // New endpoint for banner uploads
   @UseGuards(AuthGuard('jwt'))
   @Post('banner-upload-url')
   async getBannerUploadUrl(
@@ -75,5 +82,22 @@ export class ProfileController {
 
     const key = `banners/${user._id}/${uuidv4()}.jpeg`;
     return this.profileService.getBannerUploadUrl(key, contentType);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/follow')
+  async follow(@Param('id') profileId: string, @GetUser() user: UserDocument) {
+    const userProfileId = (user.profile as any)._id.toString();
+    return this.profileService.follow(profileId, userProfileId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/unfollow')
+  async unfollow(
+    @Param('id') profileId: string,
+    @GetUser() user: UserDocument,
+  ) {
+    const userProfileId = (user.profile as any)._id.toString();
+    return this.profileService.unfollow(profileId, userProfileId);
   }
 }

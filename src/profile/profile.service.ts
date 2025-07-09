@@ -37,6 +37,8 @@ export class ProfileService {
   async findByUsername(username: string): Promise<Profile | null> {
     return this.profileModel
       .findOne({ username: username.toLowerCase() })
+      .populate('followers', '_id username displayName avatarUrl')
+      .populate('following', '_id username displayName avatarUrl')
       .exec();
   }
 
@@ -59,14 +61,10 @@ export class ProfileService {
   ): Promise<Profile | null> {
     const profileToUpdate = await this.profileModel.findById(profileId);
 
-    // console.log({ profileToUpdate});
-    // console.log({ updates });
-
     if (!profileToUpdate) {
       throw new NotFoundException('Profile not found.');
     }
 
-    // ensures the user owns the profile.
     if (profileToUpdate.userId.toString() !== (user._id as string).toString()) {
       throw new ForbiddenException(
         'You are not authorized to update this profile.',
@@ -147,5 +145,75 @@ export class ProfileService {
     }
 
     return username;
+  }
+
+  async follow(
+    profileToFollowId: string,
+    userProfileId: string,
+  ): Promise<Profile> {
+    if (profileToFollowId === userProfileId) {
+      throw new BadRequestException('You cannot follow yourself.');
+    }
+
+    // Add the user to the target profile's followers list
+    await this.profileModel.updateOne(
+      { _id: profileToFollowId },
+      { $addToSet: { followers: userProfileId } }, // Use $addToSet to prevent duplicates
+    );
+
+    // add the target profile to the current user's following list
+    const updatedProfile = await this.profileModel.findByIdAndUpdate(
+      userProfileId,
+      { $addToSet: { following: profileToFollowId } },
+      { new: true },
+    );
+
+    if (!updatedProfile) {
+      throw new NotFoundException('Profile not found.');
+    }
+
+    return updatedProfile;
+  }
+
+  async unfollow(
+    profileToUnfollowId: string,
+    userProfileId: string,
+  ): Promise<Profile> {
+    await this.profileModel.updateOne(
+      { _id: profileToUnfollowId },
+      { $pull: { followers: userProfileId } }, // Use $pull to remove
+    );
+
+    const updatedProfile = await this.profileModel.findByIdAndUpdate(
+      userProfileId,
+      { $pull: { following: profileToUnfollowId } },
+      { new: true },
+    );
+
+    if (!updatedProfile) {
+      throw new NotFoundException('Profile not found.');
+    }
+
+    return updatedProfile;
+  }
+
+  async search(query: string, currentUserId: string): Promise<Profile[]> {
+    if (!query) {
+      return [];
+    }
+    const regex = new RegExp(query, 'i'); // Case-insensitive search
+    return this.profileModel
+      .find({
+        $and: [
+          { _id: { $ne: currentUserId } }, // Exclude the current user
+          {
+            $or: [
+              { displayName: { $regex: regex } },
+              { username: { $regex: regex } },
+            ],
+          },
+        ],
+      })
+      .limit(10);
   }
 }

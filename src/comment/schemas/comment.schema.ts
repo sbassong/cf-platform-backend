@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Profile } from '../../profile/schemas/profile.schema'; // Adjust path if needed
 import { Post } from '../../post/schemas/post.schema'; // Adjust path if needed
@@ -31,9 +31,12 @@ export class Comment {
   })
   likes: MongooseSchema.Types.ObjectId[];
 
-  get likesCount(): number {
-    return this.likes.length;
-  }
+  @Virtual({
+    get: function () {
+      return this.likes?.length;
+    },
+  })
+  likesCount: number;
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
