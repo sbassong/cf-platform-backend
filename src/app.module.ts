@@ -9,6 +9,7 @@ import { GroupModule } from './group/group.module';
 import { EventModule } from './event/event.module';
 import { PostModule } from './post/post.module';
 import { MessagingModule } from './messaging/messaging.module';
+import { SearchModule } from './search/search.module';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -34,6 +35,7 @@ const rateLimit = parseInt(process.env.RATE_LIMIT_MAX || '10', 10);
     GroupModule,
     EventModule,
     MessagingModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

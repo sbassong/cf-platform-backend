@@ -163,4 +163,14 @@ export class GroupsService {
     const publicUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
     return { uploadUrl, publicUrl };
   }
+
+  async search(query: string): Promise<Group[]> {
+    const regex = new RegExp(query, 'i');
+    return this.groupModel
+      .find({
+        $or: [{ name: { $regex: regex } }, { description: { $regex: regex } }],
+      })
+      .limit(10)
+      .exec();
+  }
 }

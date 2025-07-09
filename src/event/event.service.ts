@@ -163,4 +163,14 @@ export class EventsService {
     const publicUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
     return { uploadUrl, publicUrl };
   }
+
+  async search(query: string): Promise<Event[]> {
+    const regex = new RegExp(query, 'i');
+    return this.eventModel
+      .find({
+        $or: [{ title: { $regex: regex } }, { description: { $regex: regex } }],
+      })
+      .limit(10)
+      .exec();
+  }
 }
