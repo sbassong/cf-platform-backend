@@ -116,4 +116,13 @@ export class PostsService {
       .sort({ createdAt: -1 })
       .exec();
   }
+
+  async search(query: string): Promise<Post[]> {
+    const regex = new RegExp(query, 'i');
+    return this.postModel
+      .find({ content: { $regex: regex } })
+      .populate('author', 'displayName username avatarUrl')
+      .limit(10)
+      .exec();
+  }
 }
