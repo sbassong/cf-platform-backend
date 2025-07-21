@@ -1,7 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
+import { User, UserSchema } from '../user/schemas/user.schema';
+import { Profile, ProfileSchema } from '../profile/schemas/profile.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
@@ -13,6 +16,10 @@ import { ProfileModule } from '../profile/profile.module';
   imports: [
     ConfigModule,
     PassportModule,
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Profile.name, schema: ProfileSchema },
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,10 +29,12 @@ import { ProfileModule } from '../profile/profile.module';
       }),
     }),
     UserModule,
-    ProfileModule, // Import ProfileModule to use ProfileService
+    ProfileModule,
+    // forwardRef(() => UserModule),
+    // forwardRef(() => ProfileModule),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, LocalStrategy],
-  exports: [AuthService],
+  exports: [AuthService, MongooseModule],
 })
 export class AuthModule {}

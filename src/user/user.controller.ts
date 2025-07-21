@@ -1,7 +1,20 @@
-import { Controller, Get, Post, Param, Put, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Put,
+  Body,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { UserService } from './user.service';
+import { UserDocument } from './schemas/user.schema';
 import { OauthUserDto } from './dto/oauth-user-dto';
 import { User } from './schemas/user.schema';
+import { GetUser } from 'src/auth/get-user-decorator';
+import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
 
 @Controller('users')
 export class UserController {
@@ -33,5 +46,17 @@ export class UserController {
       providerId,
       emailVerified: true,
     });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('me/notifications')
+  updateNotificationSettings(
+    @GetUser() user: UserDocument,
+    @Body() settingsDto: UpdateNotificationSettingsDto,
+  ) {
+    return this.userService.updateNotificationSettings(
+      user?._id as string,
+      settingsDto,
+    );
   }
 }

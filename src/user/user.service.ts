@@ -10,6 +10,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import { OauthUserDto } from './dto/oauth-user-dto';
 import { ProfileService } from '../profile/profile.service';
 import { InjectConnection } from '@nestjs/mongoose';
+import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
 
 @Injectable()
 export class UserService {
@@ -90,5 +91,20 @@ export class UserService {
 
   async listAll(): Promise<User[]> {
     return this.userModel.find().populate('profile').exec();
+  }
+
+  async updateNotificationSettings(
+    userId: string,
+    settingsDto: UpdateNotificationSettingsDto,
+  ): Promise<User> {
+    const user = await this.userModel.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    Object.assign(user?.notifications as object, settingsDto);
+
+    return user;
   }
 }

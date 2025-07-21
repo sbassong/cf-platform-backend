@@ -10,12 +10,14 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import { GetUser } from './get-user-decorator';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { SigninUserDto } from '../user/dto/signin-user-dto';
 import { Response, Request } from 'express';
 import { UserDocument } from '../user/schemas/user.schema';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 interface RequestWithUser extends Request {
   user?: UserDocument;
@@ -105,5 +107,14 @@ export class AuthController {
     }
 
     return req.user as object;
+  }
+
+  @Post('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  changePassword(
+    @GetUser() user: UserDocument,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(user, changePasswordDto);
   }
 }

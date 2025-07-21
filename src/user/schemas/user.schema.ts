@@ -1,5 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
+import {
+  NotificationSettings,
+  NotificationSettingsSchema,
+} from './notification-settings.schema';
 
 export type UserDocument = User & Document;
 
@@ -29,6 +33,9 @@ export class User {
   // Link to the Profile document
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Profile' })
   profile: MongooseSchema.Types.ObjectId;
+
+  @Prop({ type: NotificationSettingsSchema, default: () => ({}) })
+  notifications: NotificationSettings;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
