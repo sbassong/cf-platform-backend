@@ -2,7 +2,7 @@ import * as bcrypt from 'bcryptjs';
 import {
   Injectable,
   UnauthorizedException,
-  // BadRequestException,
+  BadRequestException,
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -10,8 +10,11 @@ import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 import { ProfileService } from '../profile/profile.service';
 import { User, UserDocument } from '../user/schemas/user.schema';
+import {Profile, ProfileDocument } from '../profile/schemas/profile.schema'
+import { Model } from 'mongoose';
 import { SigninUserDto } from '../user/dto/signin-user-dto';
-import { InjectConnection } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Connection, Schema as MongooseSchema } from 'mongoose';
 
 @Injectable()
@@ -21,6 +24,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly profileService: ProfileService,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
     @InjectConnection() private readonly connection: Connection,
   ) {}
 
@@ -122,5 +127,35 @@ export class AuthService {
     } catch (err) {
       throw new UnauthorizedException('Invalid or expired token');
     }
+  }
+
+  async changePassword(
+    user: UserDocument,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    const fullUser = await this.userService.findById(user?._id as string);
+
+    // 1. Verify the current password is correct
+    const isMatch = bcrypt.compare(
+      currentPassword,
+      fullUser?.password as string,
+    );
+    if (!isMatch) {
+      throw new BadRequestException('Your current password is not correct.');
+    }
+
+    // 2. Hash the new password
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // 3. Update the user document
+    await this.userModel.updateOne(
+      { _id: user._id },
+      { password: hashedPassword },
+    );
+
+    return { message: 'Password changed successfully.' };
   }
 }

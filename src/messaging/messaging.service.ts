@@ -54,14 +54,42 @@ export class MessagingService {
   }
 
   async getConversationsForUser(userId: string) {
-    return this.conversationModel
-      .find({ participants: userId })
-      .populate('participants lastMessage');
+    return (
+      this.conversationModel
+        .find({ participants: userId })
+        .populate('participants', 'displayName username avatarUrl')
+        // perform a nested population to get the sender of the last message
+        // ensures no notifications from user's own messages
+        .populate({
+          path: 'lastMessage',
+          populate: {
+            path: 'sender',
+            select: 'displayName username avatarUrl',
+          },
+        })
+        .sort({ updatedAt: -1 })
+    );
   }
 
   async getMessagesForConversation(conversationId: string) {
     return this.messageModel
       .find({ conversation: conversationId })
       .populate('sender');
+  }
+
+  async markConversationAsRead(
+    conversationId: string,
+    userId: string,
+  ): Promise<void> {
+    // we want to find all messages in the conversation that the user has
+    // not yet read. and add the user's ID to their 'readBy' array.
+    await this.messageModel.updateMany(
+      {
+        conversation: conversationId,
+        sender: { $ne: userId },
+        readBy: { $nin: userId },
+      },
+      { $addToSet: { readBy: userId } },
+    );
   }
 }
