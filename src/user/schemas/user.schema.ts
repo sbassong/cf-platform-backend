@@ -30,7 +30,18 @@ export class User {
   @Prop({ default: true })
   isActive: boolean;
 
-  // Link to the Profile document
+  @Prop({
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
+  blockedUsers: MongooseSchema.Types.ObjectId[];
+
+  @Prop({
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
+  blockedBy: MongooseSchema.Types.ObjectId[];
+
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Profile' })
   profile: MongooseSchema.Types.ObjectId;
 

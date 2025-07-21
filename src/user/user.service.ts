@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Model,
@@ -97,14 +97,44 @@ export class UserService {
     userId: string,
     settingsDto: UpdateNotificationSettingsDto,
   ): Promise<User> {
-    const user = await this.userModel.findById(userId);
-
-    if (!user) {
-      throw new NotFoundException('User not found.');
-    }
-
+    const user = await this.findById(userId);
     Object.assign(user?.notifications as object, settingsDto);
 
     return user;
+  }
+
+  async blockUser(currentUserId: string, userIdToBlock: string): Promise<User> {
+    if (currentUserId === userIdToBlock) {
+      throw new BadRequestException('You cannot block yourself.');
+    }
+
+    await this.userModel.updateOne(
+      { _id: currentUserId },
+      { $addToSet: { blockedUsers: userIdToBlock } },
+    );
+
+    await this.userModel.updateOne(
+      { _id: userIdToBlock },
+      { $addToSet: { blockedBy: currentUserId } },
+    );
+
+    return await this.findById(currentUserId);
+  }
+
+  async unblockUser(
+    currentUserId: string,
+    userIdToUnblock: string,
+  ): Promise<User> {
+    await this.userModel.updateOne(
+      { _id: currentUserId },
+      { $pull: { blockedUsers: userIdToUnblock } },
+    );
+
+    await this.userModel.updateOne(
+      { _id: userIdToUnblock },
+      { $pull: { blockedBy: currentUserId } },
+    );
+
+    return await this.findById(currentUserId);
   }
 }

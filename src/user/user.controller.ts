@@ -59,4 +59,19 @@ export class UserController {
       settingsDto,
     );
   }
+
+  @Post(':id/block')
+  @UseGuards(AuthGuard('jwt'))
+  blockUser(@Param('id') userIdToBlock: string, @GetUser() user: UserDocument) {
+    return this.userService.blockUser(user._id as string, userIdToBlock);
+  }
+
+  @Post(':id/unblock')
+  @UseGuards(AuthGuard('jwt'))
+  unblockUser(
+    @Param('id') userIdToUnblock: string,
+    @GetUser() user: UserDocument,
+  ) {
+    return this.userService.unblockUser(user._id as string, userIdToUnblock);
+  }
 }
