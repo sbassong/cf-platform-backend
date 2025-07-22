@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Param, UseGuards, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseGuards,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { MessagingService } from './messaging.service';
 import { GetUser } from '../auth/get-user-decorator';
@@ -24,7 +33,7 @@ export class MessagingController {
   @Get('conversations')
   getConversations(@GetUser() user: UserDocument) {
     const userProfileId = (user.profile as any)._id.toString();
-    return this.messagingService.getConversationsForUser(userProfileId);
+    return this.messagingService.getConversationsForUser(userProfileId, user);
   }
 
   @Get('conversations/:id/messages')

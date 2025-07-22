@@ -9,6 +9,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post, PostDocument } from './schemas/post.schema';
+import { Profile, ProfileDocument } from 'src/profile/schemas/profile.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { UserDocument } from '../user/schemas/user.schema';
@@ -16,7 +17,10 @@ import { UserDocument } from '../user/schemas/user.schema';
 @Injectable()
 export class PostsService {
   private readonly s3Client: S3Client;
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
+  ) {
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION,
     });
@@ -33,10 +37,23 @@ export class PostsService {
     return newPost.save();
   }
 
-  async findAll(): Promise<Post[]> {
+  async findAll(user: UserDocument): Promise<Post[]> {
+    const blockedUserIds = user?.blockedUsers || [];
+    let blockedProfileIds = [];
+
+    // need to get profile ids based on blockedUserIds
+    if (blockedUserIds.length > 0) {
+      blockedProfileIds = await this.profileModel.find({
+        userId: { $in: blockedUserIds },
+      });
+    }
+
     return this.postModel
-      .find()
-      .populate('author')
+      .find({
+        // only want non-blocked user/profile content
+        author: { $nin: blockedProfileIds },
+      })
+      .populate('author', 'displayName username avatarUrl')
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -109,9 +126,21 @@ export class PostsService {
     return { uploadUrl, publicUrl };
   }
 
-  async findByGroup(groupId: string): Promise<Post[]> {
+  async findByGroup(groupId: string, user: UserDocument): Promise<Post[]> {
+    const blockedUserIds = user.blockedUsers || [];
+    let blockedProfileIds = [];
+
+    if (blockedUserIds.length > 0) {
+      blockedProfileIds = await this.profileModel.find({
+        userId: { $in: blockedUserIds },
+      });
+    }
+
     return this.postModel
-      .find({ group: groupId })
+      .find({
+        group: groupId,
+        author: { $nin: blockedProfileIds },
+      })
       .populate('author', 'displayName username avatarUrl')
       .sort({ createdAt: -1 })
       .exec();

@@ -27,9 +27,13 @@ export class ProfileController {
     return this.profileService.search(query, userProfileId);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':username')
-  async findByUsername(@Param('username') username: string) {
-    return this.profileService.findByUsername(username);
+  async findByUsername(
+    @Param('username') username: string,
+    @GetUser() user: UserDocument,
+  ) {
+    return this.profileService.findByUsername(username, user);
   }
 
   @Get(':id')
