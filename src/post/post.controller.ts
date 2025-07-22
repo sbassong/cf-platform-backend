@@ -28,8 +28,9 @@ export class PostsController {
   }
 
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  @UseGuards(AuthGuard('jwt'))
+  findAll(@GetUser() user: UserDocument) {
+    return this.postsService.findAll(user);
   }
 
   @Get('/by-author/:profileId')
@@ -72,8 +73,12 @@ export class PostsController {
     return this.postsService.getPostImageUploadUrl(key, contentType);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('by-group/:groupId')
-  findByGroup(@Param('groupId') groupId: string) {
-    return this.postsService.findByGroup(groupId);
+  findByGroup(
+    @Param('groupId') groupId: string,
+    @GetUser() user: UserDocument,
+  ) {
+    return this.postsService.findByGroup(groupId, user);
   }
 }

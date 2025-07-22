@@ -33,8 +33,9 @@ export class EventsController {
   }
 
   @Get()
-  findAll() {
-    return this.eventsService.findAll();
+  @UseGuards(AuthGuard('jwt'))
+  findAll(@GetUser() user: UserDocument) {
+    return this.eventsService.findAll(user);
   }
 
   @Get('by-participant/:profileId')

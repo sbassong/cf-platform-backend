@@ -34,12 +34,28 @@ export class ProfileService {
     return this.profileModel.findOne({ userId }).exec();
   }
 
-  async findByUsername(username: string): Promise<Profile | null> {
-    return this.profileModel
+  async findByUsername(
+    username: string,
+    user: UserDocument,
+  ): Promise<Profile | null> {
+    const profile = await this.profileModel
       .findOne({ username: username.toLowerCase() })
       .populate('followers', '_id username displayName avatarUrl')
       .populate('following', '_id username displayName avatarUrl')
       .exec();
+
+    if (!profile) {
+      throw new NotFoundException('Profile not found.');
+    }
+
+    const isBlockedByViewer = user?.blockedUsers?.some( (id) => id.toString() === profile.userId.toString(),
+    );
+
+    if (isBlockedByViewer) {
+      throw new ForbiddenException('You cannot view this profile.');
+    }
+
+    return profile.toObject();
   }
 
   async isUsernameTaken(username: string): Promise<boolean> {

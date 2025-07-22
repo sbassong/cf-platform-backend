@@ -7,6 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Group, GroupDocument } from './schemas/group.schema';
+import { Profile, ProfileDocument } from 'src/profile/schemas/profile.schema';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { UserDocument } from '../user/schemas/user.schema';
@@ -18,6 +19,7 @@ export class GroupsService {
   private readonly s3Client: S3Client;
   constructor(
     @InjectModel(Group.name) private groupModel: Model<GroupDocument>,
+    @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
   ) {
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION,
@@ -37,9 +39,20 @@ export class GroupsService {
     return newGroup.save();
   }
 
-  async findAll(): Promise<Group[]> {
+  async findAll(user: UserDocument): Promise<Group[]> {
+    const blockedUserIds = user.blockedUsers || [];
+    let blockedProfileIds = [];
+
+    if (blockedUserIds.length > 0) {
+      blockedProfileIds = await this.profileModel.find({
+        userId: { $in: blockedUserIds },
+      });
+    }
+
     return this.groupModel
-      .find()
+      .find({
+        owner: { $nin: blockedProfileIds },
+      })
       .populate('owner', 'displayName username avatarUrl')
       .populate('members', '_id username displayName avatarUrl')
       .exec();

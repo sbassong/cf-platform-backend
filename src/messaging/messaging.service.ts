@@ -6,6 +6,9 @@ import {
   ConversationDocument,
 } from './schemas/conversation.schema';
 import { Message, MessageDocument } from './schemas/message.schema';
+import { Profile, ProfileDocument } from 'src/profile/schemas/profile.schema';
+
+import { UserDocument } from 'src/user/schemas/user.schema';
 
 @Injectable()
 export class MessagingService {
@@ -13,6 +16,7 @@ export class MessagingService {
     @InjectModel(Conversation.name)
     private conversationModel: Model<ConversationDocument>,
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
+    @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
   ) {}
 
   // Finds or creates a 1-on-1 conversation
@@ -53,10 +57,24 @@ export class MessagingService {
     return savedMessage.populate('sender');
   }
 
-  async getConversationsForUser(userId: string) {
+  async getConversationsForUser(userId: string, user: UserDocument) {
+    const blockedUserIds = user.blockedUsers || [];
+    let blockedProfileIds = [];
+
+    if (blockedUserIds.length > 0) {
+      blockedProfileIds = await this.profileModel.find({
+        userId: { $in: blockedUserIds },
+      });
+    }
+
     return (
       this.conversationModel
-        .find({ participants: userId })
+        .find({
+          $and: [
+            { participants: userId },
+            { participants: { $nin: blockedProfileIds } },
+          ],
+        })
         .populate('participants', 'displayName username avatarUrl')
         // perform a nested population to get the sender of the last message
         // ensures no notifications from user's own messages

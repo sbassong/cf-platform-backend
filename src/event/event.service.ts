@@ -7,12 +7,12 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event, EventDocument } from './schemas/event.schema';
+import { Profile, ProfileDocument } from 'src/profile/schemas/profile.schema';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UserDocument } from '../user/schemas/user.schema';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
 
 @Injectable()
 export class EventsService {
@@ -20,6 +20,7 @@ export class EventsService {
 
   constructor(
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
   ) {
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION,
@@ -39,9 +40,20 @@ export class EventsService {
     return newEvent.save();
   }
 
-  async findAll(): Promise<Event[]> {
+  async findAll(user: UserDocument): Promise<Event[]> {
+    const blockedUserIds = user.blockedUsers || [];
+    let blockedProfileIds = [];
+
+    if (blockedUserIds.length > 0) {
+      blockedProfileIds = await this.profileModel.find({
+        userId: { $in: blockedUserIds },
+      });
+    }
+
     return this.eventModel
-      .find()
+      .find({
+        organizer: { $nin: blockedProfileIds },
+      })
       .populate('organizer', 'displayName username avatarUrl')
       .populate('attendees', '_id username displayName avatarUrl')
       .sort({ date: 1 }) // Sort by upcoming date

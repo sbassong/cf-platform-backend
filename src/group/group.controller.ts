@@ -33,8 +33,9 @@ export class GroupsController {
   }
 
   @Get()
-  findAll() {
-    return this.groupsService.findAll();
+  @UseGuards(AuthGuard('jwt'))
+  findAll(@GetUser() user: UserDocument) {
+    return this.groupsService.findAll(user);
   }
 
   @Get(':id')
