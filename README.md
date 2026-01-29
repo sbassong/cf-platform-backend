@@ -1,98 +1,200 @@
+# Child-Free Platform - Backend
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+
+  <h3 align="center">NestJS Backend for the Child-Free Community Platform</h3>
+  <p align="center">
+    A modular REST API and WebSocket server built with NestJS. It supports the social features, authentication, and real-time communication for the CF Platform.
+    <br />
+    <br />
+    <a href="https://github.com/sbassong/cf-platform-frontend">View Frontend Repository</a>
+  </p>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#key-features">Key Features</a></li>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#environment-variables">Environment Variables</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#database-seeding">Database Seeding</a></li>
+    <li><a href="#running-tests">Running Tests</a></li>
+    <li><a href="#architecture-overview">Architecture Overview</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ol>
+</details>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## About The Project
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This repository contains the server-side application for the **CF Platform**. It provides a robust API layer handling user identity, content management, social interactions, and real-time events. The architecture is built around Domain-Driven Design principles, separating concerns into distinct modules (Auth, User, Profile, Post, etc.) to ensure maintainability and scalability.
 
-## Project setup
+### Key Features
 
-```bash
-$ npm install
+* **Hybrid Authentication**: supports both local strategy (email/password) and OAuth integration via JWTs and secure HTTP-only cookies.
+* **Real-Time Messaging**: WebSocket gateway via **Socket.io** for instant private messaging and live notifications.
+* **Comprehensive Profile System**: Decoupled User/Auth and Profile entities to allow for rich user expression while ensuring security.
+* **Event & Group Management**: Dedicated modules for community building, including creating events and managing group memberships.
+* **Security & Performance**:
+    * Rate limiting via `@nestjs/throttler`.
+    * Redis integration for caching and session management. (In progress)
+    * Secure cookie handling with `cookie-parser`.
+* **Cloud Storage**: AWS S3 integration for handling user avatar and banner uploads.
+
+### Built With
+
+* [NestJS](https://nestjs.com/)
+* [TypeScript](https://www.typescriptlang.org/) 
+* [MongoDB](https://www.mongodb.com/) & [Mongoose](https://mongoosejs.com/)
+* [Socket.io](https://socket.io/) 
+* [Redis](https://redis.io/) - for future In-memory data store
+* [Passport.js](https://www.passportjs.org/) - auth middleware
+* [AWS SDK](https://aws.amazon.com/sdk-for-javascript/)
+
+## Getting Started
+
+To get the backend server running locally, follow these steps.
+
+### Prerequisites
+
+* **Node.js** (v20 or higher)
+* **MongoDB** (Local instance or Atlas URI, but set up for Atlas)
+* **Redis** (Local instance, not currently implemented)
+
+### Installation
+
+1.  Clone the repo
+    ```bash
+    git clone https://github.com/sbassong/cf-platform-backend.git
+    ```
+2.  Navigate into the project directory
+    ```bash
+    cd cf-platform-backend
+    ```
+3.  Install dependencies
+    ```bash
+    npm install
+    ```
+
+### Environment Variables
+
+Create a `.env` file in the root directory. You can use the following template:
+
+```env
+# Application Settings
+PORT=3001
+FRONTEND_ORIGIN="http://localhost:3000"
+
+# Database (Atlas URI or below local)
+MONGO_URI="mongodb://localhost:27017/cf-platform"
+
+# Redis
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+
+# Authentication (running `npx auth` generates secret automatically)
+JWT_SECRET="your-super-secure-jwt-secret" 
+JWT_EXPIRATION="7d"
+
+# Rate Limiting
+RATE_LIMIT_TTL=60000
+RATE_LIMIT_MAX=10
+
+# AWS S3 (for file uploads)
+AWS_REGION="us-east-1"
+AWS_ACCESS_KEY_ID="your-access-key"
+AWS_SECRET_ACCESS_KEY="your-secret-key"
+AWS_BUCKET_NAME="your-bucket-name"
 ```
 
-## Compile and run the project
+## Usage
 
+### Development Mode
+Runs the server in watch mode, automatically restarting on file changes.
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run start:dev
 ```
 
-## Run tests
-
+### Production Mode
+Builds the application and runs the optimized production build.
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run build
+npm run start:prod
 ```
 
-## Deployment
+The API will be available at `http://localhost:3001` (or your configured PORT).
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Database Seeding
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+This project includes utility scripts to help you populate your local database with test data or clear it entirely.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+* **Seed Database**: Populates the database with dummy users, posts, and comments.
+    ```bash
+    npm run db:seed
+    ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+* **Clear Database**: **WARNING** - This will wipe all data from the configured MongoDB instance.
+    ```bash
+    npm run db:clear
+    ```
 
-## Resources
+## Running Tests
 
-Check out a few resources that may come in handy when working with NestJS:
+We use **Jest** for testing. The project includes both unit tests and end-to-end (e2E) tests.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+* **Unit Tests**:
+    ```bash
+    npm run test
+    ```
 
-## Support
+* **End-to-End Tests**:
+    ```bash
+    npm run test:e2e
+    ```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+* **Test Coverage**:
+    ```bash
+    npm run test:cov
+    ```
 
-## Stay in touch
+## Architecture Overview
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+The backend is organized into **Feature Modules**. Each module typically contains:
+* **Controller**: Handles incoming HTTP requests.
+* **Service**: Contains the business logic.
+* **Schema**: Defines the MongoDB data structure (Mongoose).
+* **DTO (Data Transfer Object)**: Defines the shape of data sent over the network.
+
+### Core Modules
+* **`src/auth/`**: Authentication strategies (Local, JWT) and guards.
+* **`src/user/`**: Manages User accounts (credentials, settings).
+* **`src/profile/`**: Manages public user data (bio, interests, avatar).
+* **`src/messaging/`**: Handles WebSocket connections for chat.
+* **`src/post/`**: Logic for the news feed, posts, and likes.
+* **`src/search/`**: Dedicated endpoint for searching users and groups.
+
+---
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Distributed under the MIT License. See `LICENSE.txt` for more information.
+
+---
+
+## Contact
+
+Samuel Bassong – sam.bassong@gmail.com - [linkedin.com/in/sambassong](https://www.linkedin.com/in/sambassong/)
