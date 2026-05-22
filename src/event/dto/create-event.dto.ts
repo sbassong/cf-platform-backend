@@ -4,18 +4,18 @@ export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(150)
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(1000)
-  description: string;
+  description!: string;
 
   @IsDateString()
   @IsNotEmpty()
-  date: string;
+  date!: string;
 
   @IsString()
   @IsNotEmpty()
-  location: string;
+  location!: string;
 }

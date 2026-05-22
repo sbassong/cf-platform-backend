@@ -10,7 +10,7 @@ export class Conversation {
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
     required: true,
   })
-  participants: ProfileDocument[];
+  participants!: ProfileDocument[];
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Message' })
   lastMessage?: MongooseSchema.Types.ObjectId;

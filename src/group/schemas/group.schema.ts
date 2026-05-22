@@ -14,19 +14,19 @@ export class Group {
     throw new Error('Method not implemented.');
   }
   @Prop({ required: true, trim: true, unique: true })
-  name: string;
+  name!: string;
 
   @Prop({ required: true, trim: true })
-  description: string;
+  description!: string;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Profile', required: true })
-  owner: ProfileDocument;
+  owner!: ProfileDocument;
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
     default: [],
   })
-  members: ProfileDocument[];
+  members!: ProfileDocument[];
 
   @Prop()
   avatarUrl?: string;
@@ -35,11 +35,11 @@ export class Group {
   bannerUrl?: string;
 
   @Virtual({
-    get: function () {
+    get: function (this: GroupDocument) {
       return this.members?.length;
     },
   })
-  memberCount: number;
+  memberCount!: number;
 }
 
 export const GroupSchema = SchemaFactory.createForClass(Group);

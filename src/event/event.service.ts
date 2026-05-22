@@ -7,7 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event, EventDocument } from './schemas/event.schema';
-import { Profile, ProfileDocument } from 'src/profile/schemas/profile.schema';
+import { Profile, ProfileDocument } from '../profile/schemas/profile.schema';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UserDocument } from '../user/schemas/user.schema';

@@ -6,9 +6,9 @@ import {
   ConversationDocument,
 } from './schemas/conversation.schema';
 import { Message, MessageDocument } from './schemas/message.schema';
-import { Profile, ProfileDocument } from 'src/profile/schemas/profile.schema';
+import { Profile, ProfileDocument } from '../profile/schemas/profile.schema';
 
-import { UserDocument } from 'src/user/schemas/user.schema';
+import { UserDocument } from '../../src/user/schemas/user.schema';
 
 @Injectable()
 export class MessagingService {

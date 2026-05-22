@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString, IsOptional, IsUrl } from 'class-validator';
 export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 
   @IsOptional()
   @IsUrl()

@@ -3,10 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SearchController } from './search.controller';
 
 import { SearchService } from './search.service';
-import { ProfileService } from 'src/profile/profile.service';
-import { PostsService } from 'src/post/post.service';
-import { GroupsService } from 'src/group/group.service';
-import { EventsService } from 'src/event/event.service';
+import { ProfileService } from '../profile/profile.service';
+import { PostsService } from '../post/post.service';
+import { GroupsService } from '../group/group.service';
+import { EventsService } from '../event/event.service';
 
 import { AuthModule } from '../auth/auth.module';
 

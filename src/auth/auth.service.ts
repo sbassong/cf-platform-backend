@@ -90,7 +90,11 @@ export class AuthService {
   async signin(
     userData: Pick<SigninUserDto, 'email' | 'password'>,
   ): Promise<User> {
-    const user = await this.userService.findByEmail(userData.email);
+    const user = await this.userModel
+      .findOne({ email: userData.email })
+      .select('+password')
+      .exec();
+
     if (!user || !user.password) {
       throw new UnauthorizedException('Invalid credentials.');
     }
@@ -135,7 +139,10 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const { currentPassword, newPassword } = changePasswordDto;
 
-    const fullUser = await this.userService.findById(user?._id as string);
+    const fullUser = await this.userModel
+      .findById(user?._id as string)
+      .select('+password')
+      .exec();
 
     // 1. Verify the current password is correct
     const isMatch = bcrypt.compare(
