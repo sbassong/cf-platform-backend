@@ -13,7 +13,7 @@ import { UserService } from './user.service';
 import { UserDocument } from './schemas/user.schema';
 import { OauthUserDto } from './dto/oauth-user-dto';
 import { User } from './schemas/user.schema';
-import { GetUser } from 'src/auth/get-user-decorator';
+import { GetUser } from '../auth/get-user-decorator';
 import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
 
 @Controller('users')

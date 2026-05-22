@@ -11,35 +11,35 @@ export type EventDocument = Event & Document;
 })
 export class Event {
   @Prop({ required: true, trim: true })
-  title: string;
+  title!: string;
 
   @Prop({ required: true, trim: true })
-  description: string;
+  description!: string;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Profile', required: true })
-  organizer: ProfileDocument;
+  organizer!: ProfileDocument;
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
     default: [],
   })
-  attendees: ProfileDocument[];
+  attendees!: ProfileDocument[];
 
   @Prop({ required: true })
-  date: Date;
+  date!: Date;
 
   @Prop({ required: true })
-  location: string;
+  location!: string;
 
   @Prop()
   imageUrl?: string;
 
   @Virtual({
-    get: function () {
+    get: function (this: EventDocument) {
       return this.attendees?.length;
     },
   })
-  attendeeCount: number;
+  attendeeCount!: number;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

@@ -17,26 +17,26 @@ export class Comment {
     required: true,
     index: true,
   })
-  post: Post;
+  post!: Post;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Profile', required: true })
-  author: Profile;
+  author!: Profile;
 
   @Prop({ required: true, trim: true })
-  content: string;
+  content!: string;
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
     default: [],
   })
-  likes: MongooseSchema.Types.ObjectId[];
+  likes!: MongooseSchema.Types.ObjectId[];
 
   @Virtual({
-    get: function () {
+    get: function (this: CommentDocument) {
       return this.likes?.length;
     },
   })
-  likesCount: number;
+  likesCount!: number;
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);

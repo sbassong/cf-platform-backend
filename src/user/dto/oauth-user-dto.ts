@@ -2,7 +2,7 @@ import { IsEmail, IsOptional, IsString, IsBoolean } from 'class-validator';
 
 export class OauthUserDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   // This will be used as the initial displayName
   @IsOptional()

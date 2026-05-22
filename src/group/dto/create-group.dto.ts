@@ -4,10 +4,10 @@ export class CreateGroupDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(500)
-  description: string;
+  description!: string;
 }

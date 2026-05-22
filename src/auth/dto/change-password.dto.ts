@@ -3,7 +3,7 @@ import { IsString, MinLength, MaxLength, Matches } from 'class-validator';
 export class ChangePasswordDto {
   @IsString()
   @MinLength(8)
-  currentPassword: string;
+  currentPassword!: string;
 
   @IsString()
   @MinLength(8)
@@ -12,5 +12,5 @@ export class ChangePasswordDto {
     message:
       'Password must contain uppercase, lowercase, and a number or special character.',
   })
-  newPassword: string;
+  newPassword!: string;
 }

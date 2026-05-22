@@ -9,7 +9,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post, PostDocument } from './schemas/post.schema';
-import { Profile, ProfileDocument } from 'src/profile/schemas/profile.schema';
+import { Profile, ProfileDocument } from '../profile/schemas/profile.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { UserDocument } from '../user/schemas/user.schema';

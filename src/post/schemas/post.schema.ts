@@ -17,10 +17,10 @@ export class Post {
     required: true,
     index: true,
   })
-  author: MongooseSchema.Types.ObjectId | ProfileDocument;
+  author!: MongooseSchema.Types.ObjectId | ProfileDocument;
 
   @Prop({ required: true, trim: true })
-  content: string;
+  content!: string;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Group' })
   group?: GroupDocument; // Add the optional group reference
@@ -32,17 +32,17 @@ export class Post {
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
     default: [],
   })
-  likes: MongooseSchema.Types.ObjectId[];
+  likes!: MongooseSchema.Types.ObjectId[];
 
   @Virtual({
-    get: function () {
+    get: function (this: PostDocument) {
       return this.likes?.length;
     },
   })
-  likesCount: number;
+  likesCount!: number;
 
   @Prop({ default: 0 })
-  commentsCount: number;
+  commentsCount!: number;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

@@ -10,13 +10,13 @@ export type UserDocument = User & Document;
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, unique: true, index: true })
-  email: string;
+  email!: string;
 
   @Prop()
   password?: string;
 
   @Prop({ default: 'user' })
-  role: 'user' | 'moderator' | 'admin';
+  role!: 'user' | 'moderator' | 'admin';
 
   @Prop()
   provider?: 'google' | 'credentials';
@@ -25,28 +25,28 @@ export class User {
   providerId?: string;
 
   @Prop({ default: false })
-  emailVerified: boolean;
+  emailVerified!: boolean;
 
   @Prop({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }],
     default: [],
   })
-  blockedUsers: MongooseSchema.Types.ObjectId[];
+  blockedUsers!: MongooseSchema.Types.ObjectId[];
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }],
     default: [],
   })
-  blockedBy: MongooseSchema.Types.ObjectId[];
+  blockedBy!: MongooseSchema.Types.ObjectId[];
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Profile' })
-  profile: MongooseSchema.Types.ObjectId;
+  profile!: MongooseSchema.Types.ObjectId;
 
   @Prop({ type: NotificationSettingsSchema, default: () => ({}) })
-  notifications: NotificationSettings;
+  notifications!: NotificationSettings;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
