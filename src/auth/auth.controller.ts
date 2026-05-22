@@ -32,8 +32,7 @@ export class AuthController {
   async signUp(@Body() userBody: SigninUserDto) {
     const user = await this.authService.signup(userBody);
     // Return a sanitized user object upon successful signup
-    const { password, ...result } = (user as any)._doc;
-    return result;
+    return (user as any)._doc;
   }
 
   @UseGuards(AuthGuard('local'))
@@ -81,8 +80,7 @@ export class AuthController {
       maxAge: 3600 * 24 * 1000 * 7,
     });
 
-    const { password, ...sanitizedUser } = (user as any)._doc;
-    return { user: sanitizedUser };
+    return { user: (user as any)._doc };
   }
 
   @Post('signout')
