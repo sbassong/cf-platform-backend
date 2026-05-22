@@ -16,13 +16,13 @@ export class Profile {
     lowercase: true,
     trim: true,
   })
-  username: string;
+  username!: string;
 
   @Prop({ required: true })
-  displayName: string;
+  displayName!: string;
 
   @Prop()
-  avatarUrl: string;
+  avatarUrl!: string;
 
   @Prop()
   bannerUrl?: string;
@@ -34,36 +34,36 @@ export class Profile {
   location?: string;
 
   @Prop({ type: [String], default: [] })
-  interests: string[];
+  interests!: string[];
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-  userId: MongooseSchema.Types.ObjectId;
+  userId!: MongooseSchema.Types.ObjectId;
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
     default: [],
   })
-  following: MongooseSchema.Types.ObjectId[];
+  following!: MongooseSchema.Types.ObjectId[];
 
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Profile' }],
     default: [],
   })
-  followers: MongooseSchema.Types.ObjectId[];
+  followers!: MongooseSchema.Types.ObjectId[];
 
   @Virtual({
-    get: function () {
+    get: function (this: ProfileDocument) {
       return this.following?.length;
     },
   })
-  followingCount: number;
+  followingCount!: number;
 
   @Virtual({
-    get: function () {
+    get: function (this: ProfileDocument) {
       return this.followers?.length;
     },
   })
-  followersCount: number;
+  followersCount!: number;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);
