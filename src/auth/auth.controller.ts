@@ -54,7 +54,7 @@ export class AuthController {
       maxAge: 3600 * 24 * 1000 * 7, // 7 days
     });
 
-    return req.user;
+    return { user: req.user, accessToken };
   }
 
   @Post('provider')
@@ -80,7 +80,7 @@ export class AuthController {
       maxAge: 3600 * 24 * 1000 * 7,
     });
 
-    return { user: (user as any)._doc };
+    return { user: (user as any)._doc, accessToken };
   }
 
   @Post('signout')

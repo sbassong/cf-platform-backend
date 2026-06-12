@@ -5,7 +5,7 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+    origin: [process.env.DEV_FRONTEND_ORIGIN, process.env.FRONTEND_ORIGIN],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: 'Content-Type, Authorization',
     credentials: true, // This allows the browser to send and receive cookies
