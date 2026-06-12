@@ -15,7 +15,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 const rateTtl = parseInt(process.env.RATE_LIMIT_TTL || '60000', 10);
-const rateLimit = parseInt(process.env.RATE_LIMIT_MAX || '10', 10);
+const rateLimit = parseInt(process.env.RATE_LIMIT_MAX || '100', 10);
 
 @Module({
   imports: [
