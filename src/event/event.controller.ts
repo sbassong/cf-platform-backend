@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { EventsService } from './event.service';
@@ -41,6 +42,22 @@ export class EventsController {
   @Get('by-participant/:profileId')
   findByParticipant(@Param('profileId') profileId: string) {
     return this.eventsService.findByParticipant(profileId);
+  }
+
+  @Get('nearby')
+  @UseGuards(AuthGuard('jwt'))
+  findNearby(
+    @Query('lat') lat: string,
+    @Query('lng') lng: string,
+    @Query('radius') radius: string,
+    @GetUser() user: UserDocument,
+  ) {
+    return this.eventsService.findNearby(
+      parseFloat(lat),
+      parseFloat(lng),
+      parseFloat(radius) || 50,
+      user,
+    );
   }
 
   @Get(':id')

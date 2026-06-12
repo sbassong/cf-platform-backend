@@ -6,9 +6,13 @@ import { RedisIoAdapter } from './redis-io.adapter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const redisIoAdapter = new RedisIoAdapter(app);
-  await redisIoAdapter.connectToRedis();
-  app.useWebSocketAdapter(redisIoAdapter);
+  try {
+    const redisIoAdapter = new RedisIoAdapter(app);
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
+  } catch (e) {
+    console.warn('Redis unavailable, falling back to in-memory Socket.io adapter:', (e as Error).message);
+  }
 
   app.enableCors({
     origin: [

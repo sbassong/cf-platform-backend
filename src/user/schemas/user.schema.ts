@@ -47,6 +47,9 @@ export class User {
 
   @Prop({ type: NotificationSettingsSchema, default: () => ({}) })
   notifications!: NotificationSettings;
+
+  @Prop({ type: String, default: null })
+  expoPushToken?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

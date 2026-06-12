@@ -107,6 +107,16 @@ export class UserService {
     return user;
   }
 
+  async updatePushToken(userId: string, token: string): Promise<UserDocument> {
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { expoPushToken: token },
+      { new: true },
+    );
+    if (!user) throw new NotFoundException('User not found.');
+    return user;
+  }
+
   async blockUser(currentUserId: string, userIdToBlock: string): Promise<User> {
     if (currentUserId === userIdToBlock) {
       throw new BadRequestException('You cannot block yourself.');

@@ -34,6 +34,22 @@ export class Event {
   @Prop()
   imageUrl?: string;
 
+  @Prop({
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
+    },
+    coordinates: { type: [Number], default: [0, 0] },
+  })
+  coordinates?: { type: string; coordinates: [number, number] };
+
+  @Prop({
+    type: String,
+    enum: ['food', 'outdoors', 'socials', 'arts', 'wellness', 'travel'],
+  })
+  eventType?: string;
+
   @Virtual({
     get: function (this: EventDocument) {
       return this.attendees?.length;
@@ -43,3 +59,4 @@ export class Event {
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
+EventSchema.index({ coordinates: '2dsphere' });

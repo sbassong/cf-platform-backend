@@ -10,6 +10,7 @@ import { EventModule } from './event/event.module';
 import { PostModule } from './post/post.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { SearchModule } from './search/search.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -36,6 +37,7 @@ const rateLimit = parseInt(process.env.RATE_LIMIT_MAX || '100', 10);
     EventModule,
     MessagingModule,
     SearchModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

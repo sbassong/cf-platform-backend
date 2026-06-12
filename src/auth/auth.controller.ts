@@ -88,11 +88,11 @@ export class AuthController {
     response.clearCookie('access_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
     });
 
-    response.status(HttpStatus.OK).json({ message: 'Signed out successfully' });
+    return { message: 'Signed out successfully' };
   }
 
   @UseGuards(AuthGuard('jwt'))

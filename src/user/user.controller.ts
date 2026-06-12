@@ -60,6 +60,15 @@ export class UserController {
     );
   }
 
+  @Patch('me/push-token')
+  @UseGuards(AuthGuard('jwt'))
+  updatePushToken(
+    @GetUser() user: UserDocument,
+    @Body('token') token: string,
+  ) {
+    return this.userService.updatePushToken(user._id as string, token);
+  }
+
   @Post(':id/block')
   @UseGuards(AuthGuard('jwt'))
   blockUser(@Param('id') userIdToBlock: string, @GetUser() user: UserDocument) {

@@ -176,6 +176,38 @@ export class EventsService {
     return { uploadUrl, publicUrl };
   }
 
+  async findNearby(
+    lat: number,
+    lng: number,
+    radiusKm: number,
+    user: UserDocument,
+  ): Promise<Event[]> {
+    const blockedUserIds = user.blockedUsers || [];
+    let blockedProfileIds: any[] = [];
+
+    if (blockedUserIds.length > 0) {
+      blockedProfileIds = await this.profileModel.find({
+        userId: { $in: blockedUserIds },
+      });
+    }
+
+    return this.eventModel
+      .find({
+        coordinates: {
+          $near: {
+            $geometry: { type: 'Point', coordinates: [lng, lat] },
+            $maxDistance: radiusKm * 1000,
+          },
+        },
+        organizer: { $nin: blockedProfileIds },
+        date: { $gte: new Date() },
+      })
+      .populate('organizer', 'displayName username avatarUrl')
+      .populate('attendees', '_id username displayName avatarUrl')
+      .limit(20)
+      .exec();
+  }
+
   async search(query: string): Promise<Event[]> {
     const regex = new RegExp(query, 'i');
     return this.eventModel
