@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Comment, CommentDocument } from './schemas/comment.schema';
@@ -36,5 +36,23 @@ export class CommentsService {
       .populate('author')
       .sort({ createdAt: 'asc' })
       .exec();
+  }
+
+  async remove(
+    commentId: string,
+    user: UserDocument,
+  ): Promise<{ message: string }> {
+    const comment = await this.commentModel.findById(commentId).exec();
+    if (!comment) {
+      throw new NotFoundException(`Comment with ID "${commentId}" not found`);
+    }
+    if (comment.author.toString() !== user.profile.toString()) {
+      throw new UnauthorizedException('You can only delete your own comments.');
+    }
+    await this.commentModel.deleteOne({ _id: commentId }).exec();
+    await this.postModel.findByIdAndUpdate(comment.post, {
+      $inc: { commentsCount: -1 },
+    });
+    return { message: 'Comment deleted successfully' };
   }
 }
